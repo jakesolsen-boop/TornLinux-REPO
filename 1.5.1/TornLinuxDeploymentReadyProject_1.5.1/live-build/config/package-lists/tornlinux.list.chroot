@@ -1,0 +1,25 @@
+feh
+plymouth
+plymouth-themes
+openbox
+lightdm
+lightdm-gtk-greeter
+accountsservice
+xorg
+network-manager
+network-manager-gnome
+pavucontrol
+xterm
+blueman
+alsa-utils
+
+# --- Bluetooth ---
+bluez
+
+# --- Audio ---
+pipewire
+pipewire-pulse
+wireplumber
+
+# --- Installer ---
+calamares

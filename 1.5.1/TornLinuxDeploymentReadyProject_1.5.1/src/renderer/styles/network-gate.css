@@ -1,0 +1,56 @@
+.tlnGate {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(4, 7, 10, 0.64);
+  backdrop-filter: blur(6px);
+}
+.tlnGatePanel {
+  width: min(560px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(18,24,33,0.98), rgba(12,16,22,0.98));
+  box-shadow: 0 24px 60px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03);
+  padding: 22px;
+  color: #e7eef7;
+}
+.tlnGateEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #95a5bb;
+  margin-bottom: 8px;
+}
+.tlnGateTitle {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 1.1;
+}
+.tlnGateBody {
+  margin: 0;
+  color: #b8c4d1;
+  line-height: 1.6;
+}
+.tlnGateActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.tlnGateButton {
+  border: 1px solid rgba(120,186,222,0.14);
+  background: rgba(17,23,34,0.84);
+  color: #e7eef7;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.tlnGateButton--primary {
+  border-color: rgba(35,230,200,0.32);
+  box-shadow: 0 0 12px rgba(35,230,200,0.12);
+}

@@ -1,0 +1,39 @@
+# Logs
+*.log
+
+# Temp and swap files
+*.tmp
+*.swp
+*~
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+.env.*
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.bz2
+*.xz
+*.7z
+
+# Disk/build artifacts
+*.iso
+*.img
+*.qcow2
+*.vmdk
+*.vdi

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=TornLinux
+Description=TornLinux branded boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/tornlinux
+ScriptFile=/usr/share/plymouth/themes/tornlinux/tornlinux.script

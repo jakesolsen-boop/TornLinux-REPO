@@ -1,0 +1,78 @@
+Window.SetBackgroundTopColor(0.00, 0.00, 0.00);
+Window.SetBackgroundBottomColor(0.00, 0.00, 0.00);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+logo = Image("background.png");
+logo_sprite = Sprite(logo);
+logo_w = logo.GetWidth();
+logo_h = logo.GetHeight();
+logo_x = (screen_width - logo_w) / 2;
+logo_y = (screen_height - logo_h) / 2 - 40;
+logo_sprite.SetX(logo_x);
+logo_sprite.SetY(logo_y);
+logo_sprite.SetZ(1000);
+
+title = TextSprite("TORNLINUX");
+title.SetX((screen_width - title.GetWidth()) / 2);
+title.SetY(logo_y + logo_h + 14);
+title.SetZ(1001);
+
+status = TextSprite("Initializing command center");
+status.SetX((screen_width - status.GetWidth()) / 2);
+status.SetY(logo_y + logo_h + 48);
+status.SetZ(1002);
+
+pulse_a = Sprite();
+pulse_b = Sprite();
+pulse_c = Sprite();
+progress = 0;
+
+fun make_pulse_sprite (width, height, yoffset) {
+  box = Image(width, height);
+  box.Fill(0.35, 0.80, 1.00, 0.0);
+  s = Sprite(box);
+  s.SetX((screen_width - width) / 2);
+  s.SetY(logo_y + logo_h + yoffset);
+  s.SetZ(1001);
+  return s;
+}
+
+pulse_a = make_pulse_sprite(320, 2, 84);
+pulse_b = make_pulse_sprite(320, 2, 88);
+pulse_c = make_pulse_sprite(320, 2, 92);
+
+fun set_alpha(sprite, alpha) {
+  sprite.SetOpacity(alpha);
+}
+
+fun message_callback (text) {
+  if (text != "") {
+    status.SetText(text);
+  }
+}
+
+fun status_callback (text) {
+  if (text != "") {
+    status.SetText(text);
+  }
+}
+
+fun refresh_callback () {
+  progress++;
+  a = (Math.Sin(progress / 10.0) + 1.0) / 2.0;
+  b = (Math.Sin((progress / 10.0) + 0.8) + 1.0) / 2.0;
+  c = (Math.Sin((progress / 10.0) + 1.6) + 1.0) / 2.0;
+
+  set_alpha(pulse_a, 0.10 + (a * 0.55));
+  set_alpha(pulse_b, 0.10 + (b * 0.55));
+  set_alpha(pulse_c, 0.10 + (c * 0.55));
+
+  title.SetX((Window.GetWidth() - title.GetWidth()) / 2);
+  status.SetX((Window.GetWidth() - status.GetWidth()) / 2);
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+Plymouth.SetMessageFunction(message_callback);
+Plymouth.SetStatusFunction(status_callback);

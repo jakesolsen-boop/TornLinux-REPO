@@ -1,0 +1,54 @@
+Window.SetBackgroundTopColor(0.00, 0.00, 0.00);
+Window.SetBackgroundBottomColor(0.00, 0.00, 0.00);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+background = Image("background.png");
+background_sprite = Sprite(background);
+background_w = background.GetWidth();
+background_h = background.GetHeight();
+background_x = (screen_width - background_w) / 2;
+background_y = (screen_height - background_h) / 2;
+background_sprite.SetX(background_x);
+background_sprite.SetY(background_y);
+background_sprite.SetZ(1000);
+
+track_width = 260;
+track_height = 3;
+track_y = background_y + background_h - 92;
+track_x = (screen_width - track_width) / 2;
+
+track_img = Image(track_width, track_height);
+track_img.Fill(0.20, 0.24, 0.30, 0.55);
+track_sprite = Sprite(track_img);
+track_sprite.SetX(track_x);
+track_sprite.SetY(track_y);
+track_sprite.SetZ(1001);
+
+pulse_width = 56;
+pulse_img = Image(pulse_width, track_height + 1);
+pulse_img.Fill(0.14, 0.90, 0.79, 0.95);
+pulse_sprite = Sprite(pulse_img);
+pulse_sprite.SetX(track_x);
+pulse_sprite.SetY(track_y - 0.5);
+pulse_sprite.SetZ(1002);
+
+progress = 0;
+direction = 1;
+
+fun refresh_callback () {
+  progress = progress + direction * 3;
+  if (progress >= (track_width - pulse_width)) {
+    progress = track_width - pulse_width;
+    direction = -1;
+  }
+  if (progress <= 0) {
+    progress = 0;
+    direction = 1;
+  }
+  pulse_sprite.SetX(track_x + progress);
+  pulse_sprite.SetOpacity(0.70 + ((Math.Sin(progress / 18.0) + 1.0) / 2.0) * 0.25);
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);

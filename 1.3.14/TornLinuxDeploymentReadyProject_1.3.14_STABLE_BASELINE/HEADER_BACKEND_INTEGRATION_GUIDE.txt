@@ -1,0 +1,46 @@
+Command Center Header Backend Integration Guide 1.1.0
+
+Applied changes
+- Replaced emoji icons with SVG icons for Player, Level, TornStats, Layout, Settings, and dynamic Status
+- Removed Happiness from the header contract and UI
+- Added a single status chip with dynamic icon swapping based on Torn status
+- Added countdown rendering for statuses with a valid `until` timestamp
+- Added CSS-driven hover, active, and selected states for action icons
+- Copied brand assets into src/renderer/assets/brand
+- Aligned the header props with the App.tsx integration pattern
+
+Updated frontend contract
+type HeaderData = {
+  player: {
+    name: string;
+    level: number;
+    money: string;
+    energy: { current: number; max: number };
+    nerve: { current: number; max: number };
+    life: { current: number; max: number };
+    status: {
+      level: "online" | "warning" | "offline";
+      kind: "okay" | "hospital" | "jail" | "traveling" | "abroad" | "offline" | "unknown";
+      label: string;
+      description: string;
+      until: number | null;
+    };
+  };
+  layoutMode: "split" | "torn";
+};
+
+Required handlers
+- onToggleTornStats
+- onToggleLayout
+- onOpenSettings
+
+Human validation checklist
+[ ] frontend compiles
+[ ] header renders
+[ ] logo asset resolves
+[ ] no happiness fields are required anywhere in runtime state
+[ ] dynamic status icon changes with backend status
+[ ] timed status renders countdown when `until` is available
+[ ] TornStats icon hover works
+[ ] Settings icon hover works
+[ ] layout selected state works

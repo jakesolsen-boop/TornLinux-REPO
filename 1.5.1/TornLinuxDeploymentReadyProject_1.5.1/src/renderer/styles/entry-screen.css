@@ -1,0 +1,40 @@
+.tlnEntryRoot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at center, rgba(35,230,200,0.06), transparent 60%),
+    #070b10;
+}
+.tlnEntryPanel {
+  width: 420px;
+  padding: 32px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,14,19,0.96);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.tlnEntryBrand { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.tlnEntryLogo {
+  width: 56px; height: 56px;
+  background: url("../assets/brand/tornlinux_logo.svg") center/contain no-repeat;
+  opacity: .95;
+}
+.tlnEntryTitle { font-size: 1.4rem; font-weight: 600; color: #f2f6fb; letter-spacing: 0.02em; }
+.tlnEntrySubtitle { color: #9db0c3; font-size: 0.94rem; }
+.tlnEntryActions { display:flex; flex-direction:column; gap:12px; }
+.tlnEntryButton {
+  height: 44px; border-radius: 12px; border:1px solid rgba(255,255,255,0.08);
+  background: rgba(15,20,26,0.9); color:#e7eef7; font-weight:600; cursor:pointer; transition:all .14s ease;
+}
+.tlnEntryButton:hover { transform: translateY(-1px); }
+.tlnEntryButton.is-selected, .tlnEntryButton--primary {
+  border-color: rgba(35,230,200,0.35);
+  box-shadow: 0 0 12px rgba(35,230,200,0.15);
+}
+.tlnEntryFooter { color:#95a5bb; text-align:center; font-size: 0.86rem; }

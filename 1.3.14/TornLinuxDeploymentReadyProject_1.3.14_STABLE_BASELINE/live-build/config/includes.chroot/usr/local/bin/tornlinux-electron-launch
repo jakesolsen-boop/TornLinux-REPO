@@ -1,0 +1,43 @@
+#!/bin/bash
+set -u
+
+LOG="${HOME:-/home/tornuser}/.tornlinux-electron.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+touch "$LOG" 2>/dev/null || true
+
+APP_DIR="/opt/tornlinux-app"
+PACKAGED_BIN="$APP_DIR/TornLinux"
+
+{
+  echo "=== tornlinux-electron-launch ==="
+  date
+  echo "DISPLAY=${DISPLAY:-}"
+  echo "XAUTHORITY=${XAUTHORITY:-}"
+  echo "HOME=${HOME:-}"
+  echo "PACKAGED_BIN=$PACKAGED_BIN"
+
+  if [ ! -f "$PACKAGED_BIN" ]; then
+    echo "ERROR: binary file missing"
+    exit 1
+  fi
+
+  if [ ! -x "$PACKAGED_BIN" ]; then
+    echo "ERROR: binary not executable"
+    exit 1
+  fi
+
+
+
+  if [ -f "$APP_DIR/resources/app/electron/main.cjs" ] && command -v node >/dev/null 2>&1; then
+    echo "Syntax checking staged electron/main.cjs"
+    node -c "$APP_DIR/resources/app/electron/main.cjs" || {
+      echo "ERROR: staged electron/main.cjs failed syntax check"
+      exit 1
+    }
+  fi
+
+  echo "Launching..."
+  exec "$PACKAGED_BIN" \
+    --no-sandbox \
+    --disable-dev-shm-usage
+} >> "$LOG" 2>&1

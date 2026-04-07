@@ -1,0 +1,21 @@
+#!/bin/bash
+set -u
+
+LOG="${HOME:-/home/tornuser}/.tornlinux-session.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null 
+touch "$LOG" 2>/dev/null || true
+
+echo "[$(date)] TornLinux session start" >> "$LOG" 2>/dev/null || true
+
+if command -v feh >/dev/null 2>&1; then
+  echo "[$(date)] Applying wallpaper" >> "$LOG" 2>/dev/null || true
+  feh --bg-fill /usr/share/tornlinux/wallpaper.png >> "$LOG" 2>&1 || true
+fi
+
+sleep 1
+
+echo "[$(date)] Launching TornLinux Electron app" >> "$LOG" 2>/dev/null || true
+/usr/local/bin/tornlinux-electron-launch >> "$LOG" 2>&1
+
+echo "[$(date)] Session wrapper completed" >> "$LOG" 2>/dev/null || true
+exit 0
