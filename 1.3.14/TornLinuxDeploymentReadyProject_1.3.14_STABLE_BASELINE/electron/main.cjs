@@ -1,4 +1,4 @@
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const { app, BrowserWindow, ipcMain, shell, Menu, session } = require('electron');
 const path = require('node:path');
 const { IPC_CHANNELS } = require('./runtime/ipc.cjs');
@@ -161,7 +161,50 @@ ipcMain.handle(IPC_CHANNELS.GET_UNIFIED_STATE, async () => {
   return getUnifiedState(config.tornApiKey);
 });
 
+function getNetworkStatus() {
+  return new Promise((resolve) => {
+    execFile('nmcli', ['networking', 'connectivity'], { timeout: 4000 }, (error, stdout) => {
+      if (error) {
+        resolve({ connectivity: 'offline', raw: 'error' });
+        return;
+      }
 
+      const raw = String(stdout || '').trim().toLowerCase();
+      if (raw === 'full') {
+        resolve({ connectivity: 'online', raw });
+        return;
+      }
+
+      resolve({ connectivity: 'offline', raw: raw || 'unknown' });
+    });
+  });
+}
+
+function getSystemVolume() {
+  return new Promise((resolve) => {
+    execFile('amixer', ['get', 'Master'], { timeout: 4000 }, (error, stdout) => {
+      if (error) {
+        resolve(50);
+        return;
+      }
+      const match = String(stdout || '').match(/\[(\d{1,3})%\]/);
+      resolve(match ? Math.max(0, Math.min(100, Number(match[1]))) : 50);
+    });
+  });
+}
+
+function setSystemVolume(value) {
+  return new Promise((resolve) => {
+    const clamped = Math.max(0, Math.min(100, Number(value) || 0));
+    execFile('amixer', ['set', 'Master', `${clamped}%`], { timeout: 4000 }, async (error) => {
+      if (error) {
+        resolve(await getSystemVolume());
+        return;
+      }
+      resolve(clamped);
+    });
+  });
+}
 
 function spawnFirstAvailable(candidates) {
   return new Promise((resolve) => {
@@ -197,3 +240,21 @@ ipcMain.handle('tornlinux:launchNetworkSettings', async () => {
   ]);
 });
 
+ipcMain.handle('tornlinux:getNetworkStatus', async () => getNetworkStatus());
+
+ipcMain.handle('tornlinux:launchInstaller', async () => {
+  return spawnFirstAvailable([
+    { name: 'calamares', command: 'calamares', args: [] },
+    { name: 'xterm-calamares', command: 'xterm', args: ['-e', 'calamares'] }
+  ]);
+});
+
+ipcMain.handle('tornlinux:launchBluetoothSettings', async () => {
+  return spawnFirstAvailable([
+    { name: 'blueman-manager', command: 'blueman-manager', args: [] },
+    { name: 'xterm-bluetoothctl', command: 'xterm', args: ['-e', 'bluetoothctl'] }
+  ]);
+});
+
+ipcMain.handle('tornlinux:getSystemVolume', async () => getSystemVolume());
+ipcMain.handle('tornlinux:setSystemVolume', async (_event, value) => setSystemVolume(value));
