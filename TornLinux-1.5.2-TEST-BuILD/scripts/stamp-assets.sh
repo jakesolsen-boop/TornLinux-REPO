@@ -13,13 +13,42 @@ python3 -c "import PIL" >/dev/null 2>&1 || {
   exit 1
 }
 
-MASTER_SPLASH="$PROJECT_ROOT/assets/master/splash.png"
-MASTER_WALLPAPER="$PROJECT_ROOT/assets/master/wallpaper.png"
+resolve_asset_source() {
+  local kind="$1"
+  local candidates=()
+  if [[ "$kind" == "splash" ]]; then
+    candidates=(
+      "$PROJECT_ROOT/assets/master/splash.png"
+      "$PROJECT_ROOT/assets/splash/splash_${VERSION}.png"
+      "$PROJECT_ROOT/assets/splash/splash_1.3.11.png"
+      "$PROJECT_ROOT/assets/splash/splash_1.3.5.png"
+    )
+  else
+    candidates=(
+      "$PROJECT_ROOT/assets/master/wallpaper.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_${VERSION}.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.11.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.5.png"
+    )
+  fi
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+MASTER_SPLASH="$(resolve_asset_source splash)"
+MASTER_WALLPAPER="$(resolve_asset_source wallpaper)"
 RUNTIME_DIR="$PROJECT_ROOT/live-build/config/includes.chroot/usr/share/tornlinux"
 PLYMOUTH_DIR="$PROJECT_ROOT/live-build/config/includes.chroot/usr/share/plymouth/themes/tornlinux"
 
-[[ -f "$MASTER_SPLASH" ]] || { echo "[stamp-assets] ERROR: missing $MASTER_SPLASH" >&2; exit 1; }
-[[ -f "$MASTER_WALLPAPER" ]] || { echo "[stamp-assets] ERROR: missing $MASTER_WALLPAPER" >&2; exit 1; }
+[[ -f "$MASTER_SPLASH" ]] || { echo "[stamp-assets] ERROR: no splash asset source found" >&2; exit 1; }
+[[ -f "$MASTER_WALLPAPER" ]] || { echo "[stamp-assets] ERROR: no wallpaper asset source found" >&2; exit 1; }
 
 mkdir -p "$RUNTIME_DIR"
 mkdir -p "$PLYMOUTH_DIR"
@@ -43,27 +72,31 @@ font_candidates = [
 ]
 font_path = next((f for f in font_candidates if Path(f).exists()), None)
 
-def stamp(target: Path):
+def stamp(target: Path, anchor: str):
     img = Image.open(target).convert("RGBA")
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, max(24, img.width // 42)) if font_path else ImageFont.load_default()
     bbox = draw.textbbox((0, 0), stamp_text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     pad = max(20, img.width // 72)
-    x = img.width - tw - pad - 6
-    y = img.height - th - pad - 4
+    if anchor == "bottom-left":
+        x = pad + 6
+        y = img.height - th - pad - 4
+    else:
+        x = img.width - tw - pad - 6
+        y = img.height - th - pad - 4
     draw.rounded_rectangle([x-14, y-8, x+tw+14, y+th+8], radius=10, fill=(0, 0, 0, 155))
     draw.text((x+1, y+1), stamp_text, font=font, fill=(0, 0, 0, 210))
     draw.text((x, y), stamp_text, font=font, fill=(255, 255, 255, 245))
     img.save(target)
 
-targets = [
-    project_root / "live-build/config/includes.chroot/usr/share/tornlinux/splash.png",
-    project_root / "live-build/config/includes.chroot/usr/share/tornlinux/wallpaper.png",
-    project_root / "live-build/config/includes.chroot/usr/share/plymouth/themes/tornlinux/background.png",
-]
-for target in targets:
-    stamp(target)
+targets = {
+    project_root / "live-build/config/includes.chroot/usr/share/tornlinux/splash.png": "bottom-left",
+    project_root / "live-build/config/includes.chroot/usr/share/tornlinux/wallpaper.png": "bottom-right",
+    project_root / "live-build/config/includes.chroot/usr/share/plymouth/themes/tornlinux/background.png": "bottom-left",
+}
+for target, anchor in targets.items():
+    stamp(target, anchor)
 
 print("[stamp-assets] Copied master assets and stamped staged assets successfully")
 PY

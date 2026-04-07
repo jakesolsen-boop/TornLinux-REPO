@@ -1,0 +1,214 @@
+.tls-splashRoot {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at top, rgba(48, 110, 196, 0.28), transparent 36%),
+    linear-gradient(180deg, #08111d 0%, #03070d 100%);
+  color: #eff7ff;
+}
+
+.tls-splashBackdrop,
+.tls-splashGrid,
+.tls-splashGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tls-splashBackdrop {
+  background:
+    radial-gradient(circle at center, rgba(91, 189, 255, 0.08), transparent 45%),
+    linear-gradient(90deg, transparent 0%, rgba(91, 189, 255, 0.04) 48%, transparent 100%);
+  animation: tls-splash-pan 6s linear infinite;
+}
+
+.tls-splashGrid {
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(136, 206, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(136, 206, 255, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0.95) 100%);
+}
+
+.tls-splashGlow {
+  filter: blur(80px);
+  opacity: 0.46;
+}
+
+.tls-splashGlow--left {
+  inset: auto auto 14% 8%;
+  width: 28vw;
+  height: 28vw;
+  background: rgba(0, 173, 255, 0.16);
+}
+
+.tls-splashGlow--right {
+  inset: 10% 4% auto auto;
+  width: 22vw;
+  height: 22vw;
+  background: rgba(105, 225, 255, 0.12);
+}
+
+.tls-splashCore {
+  position: relative;
+  z-index: 1;
+  width: min(780px, calc(100vw - 48px));
+  padding: 48px 42px;
+  border: 1px solid rgba(119, 205, 255, 0.2);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(7, 16, 27, 0.9), rgba(5, 10, 18, 0.84));
+  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.42);
+  display: grid;
+  justify-items: center;
+  gap: 28px;
+}
+
+.tls-splashSeal {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+}
+
+.tls-splashSeal__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 220, 255, 0.32);
+  box-shadow: inset 0 0 32px rgba(54, 157, 255, 0.16);
+  animation: tls-splash-orbit 4.4s linear infinite;
+}
+
+.tls-splashSeal__ring--inner {
+  inset: 14px;
+  animation-duration: 3.2s;
+  animation-direction: reverse;
+}
+
+.tls-splashSeal__mark {
+  position: relative;
+  z-index: 1;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: #f4fbff;
+  text-shadow: 0 0 24px rgba(123, 231, 255, 0.22);
+}
+
+.tls-splashText {
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+
+.tls-splashEyebrow,
+.tls-splashSubtitle,
+.tls-splashStamp {
+  color: rgba(207, 223, 238, 0.82);
+}
+
+.tls-splashEyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+}
+
+.tls-splashTitle {
+  margin: 0;
+  font-size: clamp(52px, 8vw, 96px);
+  line-height: 0.94;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tls-splashSubtitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 540px;
+}
+
+.tls-splashPulse {
+  display: flex;
+  gap: 12px;
+}
+
+.tls-splashPulse span {
+  width: 96px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(123, 231, 255, 0.15);
+  box-shadow: 0 0 18px rgba(123, 231, 255, 0.14);
+  animation: tls-splash-pulse 1.35s ease-in-out infinite;
+}
+
+.tls-splashPulse span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.tls-splashPulse span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.tls-splashStamp {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  z-index: 1;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 220, 255, 0.18);
+  background: rgba(4, 9, 15, 0.72);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@keyframes tls-splash-pan {
+  0% { transform: translateX(-2%); }
+  50% { transform: translateX(2%); }
+  100% { transform: translateX(-2%); }
+}
+
+@keyframes tls-splash-orbit {
+  from { transform: rotate(0deg) scale(1); opacity: 0.78; }
+  50% { transform: rotate(180deg) scale(1.04); opacity: 1; }
+  to { transform: rotate(360deg) scale(1); opacity: 0.78; }
+}
+
+@keyframes tls-splash-pulse {
+  0%, 100% {
+    transform: scaleX(0.72);
+    opacity: 0.34;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .tls-splashCore {
+    width: min(100vw - 24px, 680px);
+    padding: 36px 24px;
+  }
+
+  .tls-splashSeal {
+    width: 108px;
+    height: 108px;
+  }
+
+  .tls-splashSeal__mark {
+    font-size: 34px;
+  }
+
+  .tls-splashPulse span {
+    width: 68px;
+  }
+}

@@ -41,6 +41,14 @@ chmod 755 /var/lib/lightdm/data || true
 # Ensure helper scripts are executable
 chmod +x /usr/local/bin/tornlinux-electron-launch || true
 chmod +x /usr/local/bin/tornlinux-session-start || true
+chmod +x /usr/local/bin/tornlinux-installer || true
+
+# Allow the live session to run the custom installer backend without interactive sudo prompts.
+mkdir -p /etc/sudoers.d
+cat >/etc/sudoers.d/tornlinux-installer <<'EOF'
+tornuser ALL=(root) NOPASSWD: /usr/local/bin/tornlinux-installer
+EOF
+chmod 440 /etc/sudoers.d/tornlinux-installer
 
 # Apply TornLinux Plymouth theme if plymouth is available
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then

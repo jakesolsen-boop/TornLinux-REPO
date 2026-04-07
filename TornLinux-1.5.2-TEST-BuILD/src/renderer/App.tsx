@@ -10,28 +10,28 @@ import { FirstRunSetup } from './components/FirstRunSetup';
 import { FirstUseLanding } from './components/FirstUseLanding';
 import { EntryScreen } from './components/EntryScreen';
 import { InstallerScreen } from './components/InstallerScreen';
-import TornLinuxSystemBar from './components/TornLinuxSystemBar';
+import { BootSplash } from './components/BootSplash';
 import type { AppConfig, ConfigStatus } from '@shared/types';
 import './styles/app.css';
 import './styles/settings-drawer.css';
 import './styles/first-run-setup.css';
-import './styles/system-bar.css';
 import './styles/network-gate.css';
+import './styles/boot-splash.css';
 import './styles/entry-screen.css';
 import './styles/landing-screen.css';
 import './styles/installer-screen.css';
 
-type BootStage = 'entry' | 'landing' | 'installer' | 'system';
+type BootStage = 'splash' | 'entry' | 'landing' | 'installer' | 'system';
 type EntryMode = 'live' | 'install';
 
 const ENTRY_MODE_KEY = 'tornlinux.entry.lastMode';
 const FIRST_RUN_KEY = 'tornlinux.firstRunComplete';
-const SEEDED_KEY = 't12kBJHUoufNNdqD';
 
 export function App() {
   const [settings, setSettings] = useState({
     layoutMode: 'split' as const,
     discordWidth: 480,
+    timezone: 'America/Chicago',
     tornUrl: 'https://www.torn.com/',
     discordUrl: 'https://discord.com/app',
     refreshIntervalMs: 30000,
@@ -42,23 +42,31 @@ export function App() {
   const [config, setConfig] = useState<AppConfig>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiGateOpen, setApiGateOpen] = useState(false);
-  const [bootStage, setBootStage] = useState<BootStage>('entry');
+  const [bootStage, setBootStage] = useState<BootStage>('splash');
   const [entryMode, setEntryMode] = useState<EntryMode>('live');
+  const [appVersion, setAppVersion] = useState('v1.5.2');
 
-  const { state, loading, refresh: refreshPlayer } = usePlayerState(30000);
+  const { state, loading, refresh: refreshPlayer } = usePlayerState(settings.refreshIntervalMs);
   const { isOnline, refresh: refreshNetwork } = useNetworkStatus();
 
   useEffect(() => {
     const load = async () => {
-      const nextSettings = await window.tornlinux?.getSettings();
-      const nextConfigStatus = await window.tornlinux?.getConfigStatus();
-      const nextConfig = await window.tornlinux?.getConfig();
+      const minSplashDelay = new Promise((resolve) => window.setTimeout(resolve, 1500));
+      const [nextSettings, nextConfigStatus, nextConfig, nextAppVersion] = await Promise.all([
+        window.tornlinux?.getSettings(),
+        window.tornlinux?.getConfigStatus(),
+        window.tornlinux?.getConfig(),
+        window.tornlinux?.getAppVersion?.(),
+      ]);
+      await minSplashDelay;
       if (nextSettings) setSettings(nextSettings);
       if (nextConfigStatus) setConfigStatus(nextConfigStatus);
       if (nextConfig) setConfig(nextConfig);
+      if (nextAppVersion) setAppVersion(`v${nextAppVersion}`);
 
       const storedMode = typeof window !== 'undefined' ? localStorage.getItem(ENTRY_MODE_KEY) : null;
       if (storedMode === 'install' || storedMode === 'live') setEntryMode(storedMode);
+      setBootStage('entry');
     };
 
     const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -71,7 +79,10 @@ export function App() {
     if (state?.settings) setSettings(state.settings);
   }, [state]);
 
-  const layout = useMemo(() => computeAppLayout(viewport, settings.layoutMode, 480), [viewport, settings.layoutMode]);
+  const layout = useMemo(
+    () => computeAppLayout(viewport, settings.layoutMode, settings.discordWidth),
+    [settings.discordWidth, settings.layoutMode, viewport],
+  );
   const player = state?.player ?? {
     name: 'No API Key',
     level: 0,
@@ -125,7 +136,6 @@ export function App() {
     await window.tornlinux?.saveConfig({
       tornApiKey: tornKey,
       tornStatsApiKey: tornStatsKey,
-      seededBuildVersion: tornKey === SEEDED_KEY ? '1.5.0' : undefined,
     });
     await reloadState();
   };
@@ -155,10 +165,6 @@ export function App() {
     if (!hasValidApi) setApiGateOpen(true);
   };
 
-  const launchInstaller = async () => {
-    return await window.tornlinux?.launchInstaller?.();
-  };
-
   const toggleTornStats = async () => {
     const nextOpen = await window.tornlinux?.toggleTornStats();
     if (typeof nextOpen === 'boolean') {
@@ -175,8 +181,12 @@ export function App() {
     await window.tornlinux?.launchBluetoothSettings?.();
   };
 
+  if (bootStage === 'splash') {
+    return <BootSplash version={appVersion} />;
+  }
+
   if (bootStage === 'entry') {
-    return <EntryScreen initialMode={entryMode} onRunLive={() => { void runLive(); }} onInstall={installMode} />;
+    return <EntryScreen version={appVersion} initialMode={entryMode} onRunLive={() => { void runLive(); }} onInstall={installMode} />;
   }
 
   if (bootStage === 'landing') {
@@ -197,7 +207,7 @@ export function App() {
   if (bootStage === 'installer') {
     return (
       <InstallerScreen
-        onLaunchInstaller={launchInstaller}
+        version={appVersion}
         onBack={() => setBootStage('entry')}
       />
     );
@@ -248,7 +258,6 @@ export function App() {
       </main>
 
       <TornStatsOverlay open={settings.tornStatsOpen} data={tornStats} onClose={() => void toggleTornStats()} />
-      <TornLinuxSystemBar settings={settings} />
 
       <SettingsDrawer
         open={settingsOpen}

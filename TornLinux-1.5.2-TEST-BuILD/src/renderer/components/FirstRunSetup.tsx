@@ -65,7 +65,7 @@ export function FirstRunSetup({
   return (
     <div className="tfs-backdrop" role="presentation">
       <section className="tfs-panel" aria-label="First run setup">
-        <div className="tfs-kicker">TORNLINUX 1.2.0</div>
+        <div className="tfs-kicker">TORNLINUX 1.5.2</div>
         <h1>Initialize command center</h1>
         <p className="tfs-copy">
           Set your core connections now so the first launch feels like a launch instead of a wiring closet.

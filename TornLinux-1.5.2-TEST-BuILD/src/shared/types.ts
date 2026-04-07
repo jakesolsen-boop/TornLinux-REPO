@@ -62,7 +62,6 @@ export interface AppSettings {
 export interface AppConfig {
   tornApiKey?: string;
   tornStatsApiKey?: string;
-  seededBuildVersion?: string;
 }
 
 export interface ConfigStatus {
@@ -82,17 +81,84 @@ export interface UnifiedPlayerState {
   };
 }
 
+export interface DisplayState {
+  output: string;
+  currentMode: string;
+  modes: string[];
+}
+
+export type PowerAction = 'reload' | 'restart' | 'shutdown';
+
+export type InstallerMode = 'auto' | 'manual';
+
+export interface InstallerDisk {
+  name: string;
+  path: string;
+  sizeBytes: number;
+  sizeLabel: string;
+  model: string;
+  vendor: string;
+  transport: string;
+  removable: boolean;
+  hotplug: boolean;
+  mountpoints: string[];
+  children?: InstallerDiskPartition[];
+}
+
+export interface InstallerDiskPartition {
+  name: string;
+  path: string;
+  sizeBytes: number;
+  sizeLabel: string;
+  fstype: string;
+  mountpoint: string;
+}
+
+export interface InstallerPlanOperation {
+  kind: string;
+  target: string;
+  detail: string;
+}
+
+export interface InstallerPlan {
+  ok: boolean;
+  mode: InstallerMode;
+  targetDisk: string;
+  operations: InstallerPlanOperation[];
+  error?: string;
+}
+
+export interface InstallerApplyResult {
+  ok: boolean;
+  mode: InstallerMode;
+  targetDisk: string;
+  logs?: string;
+  error?: string;
+}
+
 export type TornLinuxBridge = {
+  getAppVersion: () => Promise<string>;
   getSettings: () => Promise<AppSettings>;
-  setSettings: (settings: AppSettings) => Promise<void>;
+  setSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
+  toggleLayout: () => Promise<LayoutMode>;
+  setLayout: (mode: LayoutMode) => Promise<LayoutMode>;
+  toggleTornStats: () => Promise<boolean>;
+  openSettings: () => Promise<void>;
+  log: (level: 'info' | 'warn' | 'error', message: string, meta?: unknown) => Promise<void>;
   getConfig: () => Promise<AppConfig>;
-  saveConfig: (config: AppConfig) => Promise<void>;
+  saveConfig: (config: AppConfig) => Promise<ConfigStatus>;
   getConfigStatus: () => Promise<ConfigStatus>;
+  getUnifiedState: () => Promise<UnifiedPlayerState>;
   launchSoundSettings: () => Promise<{ ok: boolean; method: string }>;
   launchNetworkSettings: () => Promise<{ ok: boolean; method: string }>;
   getNetworkStatus: () => Promise<NetworkStatus>;
+  getDisplayState: () => Promise<DisplayState | null>;
+  setDisplayMode: (mode: string) => Promise<{ ok: boolean; mode: string; output?: string }>;
+  powerAction: (action: PowerAction) => Promise<{ ok: boolean; action: PowerAction; method: string }>;
   launchBluetoothSettings: () => Promise<{ ok: boolean; method: string }>;
-  launchInstaller: () => Promise<{ ok: boolean; method: string }>;
+  getInstallerDisks: () => Promise<InstallerDisk[]>;
+  previewInstallerPlan: (diskPath: string, mode: InstallerMode) => Promise<InstallerPlan>;
+  applyInstallerPlan: (diskPath: string, mode: InstallerMode, confirmation: string) => Promise<InstallerApplyResult>;
   getSystemVolume: () => Promise<number>;
   setSystemVolume: (value: number) => Promise<number>;
 };

@@ -3,3 +3,6 @@ dist
 TornLinux-linux-x64
 live-image-*.iso
 *.log
+PREFLIGHT_SUMMARY*.txt
+POST_BUILD_VALIDATION*.txt
+.validation-worktree/

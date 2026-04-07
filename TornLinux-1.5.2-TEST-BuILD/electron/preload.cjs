@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const { IPC_CHANNELS } = require('./runtime/ipc.cjs');
 
 contextBridge.exposeInMainWorld('tornlinux', {
+  getAppVersion: () => ipcRenderer.invoke('tornlinux:getAppVersion'),
   getSettings: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SETTINGS),
   setSettings: (partial) => ipcRenderer.invoke(IPC_CHANNELS.SET_SETTINGS, partial),
   toggleLayout: () => ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_LAYOUT),
@@ -13,10 +14,16 @@ contextBridge.exposeInMainWorld('tornlinux', {
   getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.GET_CONFIG),
   saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_CONFIG, config),
   getUnifiedState: () => ipcRenderer.invoke(IPC_CHANNELS.GET_UNIFIED_STATE),
+  launchSoundSettings: () => ipcRenderer.invoke('tornlinux:launchSoundSettings'),
   launchNetworkSettings: () => ipcRenderer.invoke('tornlinux:launchNetworkSettings'),
   getNetworkStatus: () => ipcRenderer.invoke('tornlinux:getNetworkStatus'),
+  getDisplayState: () => ipcRenderer.invoke('tornlinux:getDisplayState'),
+  setDisplayMode: (mode) => ipcRenderer.invoke('tornlinux:setDisplayMode', mode),
+  powerAction: (action) => ipcRenderer.invoke('tornlinux:powerAction', action),
   launchBluetoothSettings: () => ipcRenderer.invoke('tornlinux:launchBluetoothSettings'),
-  launchInstaller: () => ipcRenderer.invoke('tornlinux:launchInstaller'),
+  getInstallerDisks: () => ipcRenderer.invoke('tornlinux:getInstallerDisks'),
+  previewInstallerPlan: (diskPath, mode) => ipcRenderer.invoke('tornlinux:previewInstallerPlan', diskPath, mode),
+  applyInstallerPlan: (diskPath, mode, confirmation) => ipcRenderer.invoke('tornlinux:applyInstallerPlan', diskPath, mode, confirmation),
   getSystemVolume: () => ipcRenderer.invoke('tornlinux:getSystemVolume'),
   setSystemVolume: (value) => ipcRenderer.invoke('tornlinux:setSystemVolume', value),
 });

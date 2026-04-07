@@ -1,33 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { UnifiedPlayerState } from '@shared/types';
 
 export function usePlayerState(refreshIntervalMs = 30000) {
   const [state, setState] = useState<UnifiedPlayerState | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refresh = useCallback(async () => {
+    const next = await window.tornlinux?.getUnifiedState();
+    if (!next) return null;
+    setState(next);
+    setLoading(false);
+    return next;
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
-    const load = async () => {
-      const next = await window.tornlinux?.getUnifiedState();
-      if (!mounted || !next) return;
-      setState(next);
-      setLoading(false);
-    };
-
-    load().catch(() => {
+    refresh().catch(() => {
       if (mounted) setLoading(false);
     });
 
     const timer = window.setInterval(() => {
-      load().catch(() => undefined);
+      refresh().catch(() => undefined);
     }, refreshIntervalMs);
 
     return () => {
       mounted = false;
       window.clearInterval(timer);
     };
-  }, [refreshIntervalMs]);
+  }, [refresh, refreshIntervalMs]);
 
-  return useMemo(() => ({ state, loading }), [state, loading]);
+  return useMemo(() => ({ state, loading, refresh }), [loading, refresh, state]);
 }

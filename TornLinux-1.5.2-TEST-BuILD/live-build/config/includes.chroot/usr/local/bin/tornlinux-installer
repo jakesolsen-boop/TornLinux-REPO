@@ -1,0 +1,242 @@
+#!/bin/bash
+set -euo pipefail
+
+command_name="${1:-}"
+shift || true
+
+TARGET_ROOT_BASE="/tmp/tornlinux-installer-target"
+PAYLOAD_EXCLUDES=(
+  "/dev/*"
+  "/proc/*"
+  "/sys/*"
+  "/tmp/*"
+  "/run/*"
+  "/mnt/*"
+  "/media/*"
+  "/cdrom/*"
+  "/lost+found"
+  "${TARGET_ROOT_BASE}/*"
+)
+
+require_root() {
+  if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+    echo '{"ok":false,"error":"installer must run as root"}'
+    exit 1
+  fi
+}
+
+json_escape() {
+  printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+part_suffix() {
+  local disk_path="$1"
+  if [[ "$disk_path" =~ (nvme|mmcblk) ]]; then
+    printf 'p'
+  fi
+}
+
+boot_partition_path() {
+  local disk_path="$1"
+  printf '%s%s1' "$disk_path" "$(part_suffix "$disk_path")"
+}
+
+root_partition_path() {
+  local disk_path="$1"
+  printf '%s%s2' "$disk_path" "$(part_suffix "$disk_path")"
+}
+
+list_disks() {
+  lsblk -J -b -o NAME,PATH,SIZE,TYPE,MODEL,VENDOR,TRAN,RM,HOTPLUG,MOUNTPOINT,FSTYPE
+}
+
+preview_plan() {
+  local disk_path="${1:-}"
+  local mode="${2:-auto}"
+
+  if [[ -z "$disk_path" ]]; then
+    echo '{"ok":false,"error":"disk path required"}'
+    exit 1
+  fi
+
+  if [[ "$mode" != "auto" && "$mode" != "manual" ]]; then
+    echo '{"ok":false,"error":"invalid install mode"}'
+    exit 1
+  fi
+
+  if [[ "$mode" == "manual" ]]; then
+    cat <<EOF
+{"ok":false,"mode":"$mode","targetDisk":"$disk_path","operations":[],"error":"manual mode is not implemented yet"}
+EOF
+    exit 0
+  fi
+
+  local boot_partition
+  local root_partition
+  boot_partition="$(boot_partition_path "$disk_path")"
+  root_partition="$(root_partition_path "$disk_path")"
+  cat <<EOF
+{"ok":true,"mode":"$mode","targetDisk":"$disk_path","operations":[
+  {"kind":"wipe","target":"$disk_path","detail":"Create fresh GPT label"},
+  {"kind":"partition","target":"$boot_partition","detail":"EFI system partition 512 MiB FAT32"},
+  {"kind":"partition","target":"$root_partition","detail":"Root partition uses remaining space ext4"},
+  {"kind":"format","target":"$boot_partition","detail":"mkfs.vfat -F32"},
+  {"kind":"format","target":"$root_partition","detail":"mkfs.ext4"},
+  {"kind":"mount","target":"$root_partition","detail":"Mount target root filesystem"},
+  {"kind":"mount","target":"$boot_partition","detail":"Mount EFI partition at /boot/efi"},
+  {"kind":"copy","target":"/","detail":"Rsync current live TornLinux filesystem into target root"},
+  {"kind":"fstab","target":"$root_partition","detail":"Write target fstab using discovered UUIDs"},
+  {"kind":"bootloader","target":"$disk_path","detail":"Install and configure UEFI GRUB bootloader"}
+]}
+EOF
+}
+
+device_is_disk() {
+  [[ "$(lsblk -ndo TYPE "$1" 2>/dev/null || true)" == "disk" ]]
+}
+
+device_has_mounts() {
+  lsblk -lnpo NAME,MOUNTPOINT "$1" | awk 'NF > 1 { exit 0 } END { exit 1 }'
+}
+
+write_fstab() {
+  local target_root="$1"
+  local boot_partition="$2"
+  local root_partition="$3"
+  local root_uuid
+  local boot_uuid
+  root_uuid="$(blkid -s UUID -o value "$root_partition")"
+  boot_uuid="$(blkid -s UUID -o value "$boot_partition")"
+  cat >"$target_root/etc/fstab" <<EOF
+UUID=$root_uuid / ext4 defaults,noatime 0 1
+UUID=$boot_uuid /boot/efi vfat umask=0077 0 1
+EOF
+}
+
+bind_mounts() {
+  local target_root="$1"
+  mount --bind /dev "$target_root/dev"
+  mount --bind /proc "$target_root/proc"
+  mount --bind /sys "$target_root/sys"
+  mount --bind /run "$target_root/run"
+}
+
+unbind_mounts() {
+  local target_root="$1"
+  umount -lf "$target_root/run" >/dev/null 2>&1 || true
+  umount -lf "$target_root/sys" >/dev/null 2>&1 || true
+  umount -lf "$target_root/proc" >/dev/null 2>&1 || true
+  umount -lf "$target_root/dev" >/dev/null 2>&1 || true
+}
+
+apply_plan() {
+  require_root
+
+  local disk_path="${1:-}"
+  local mode="${2:-auto}"
+  local confirmation="${3:-}"
+
+  if [[ -z "$disk_path" ]]; then
+    echo '{"ok":false,"error":"disk path required"}'
+    exit 1
+  fi
+
+  if [[ "$mode" != "auto" ]]; then
+    echo '{"ok":false,"error":"only auto mode can be applied in this build"}'
+    exit 1
+  fi
+
+  if [[ "$confirmation" != "ERASE ${disk_path}" ]]; then
+    echo '{"ok":false,"error":"confirmation phrase mismatch"}'
+    exit 1
+  fi
+
+  if ! device_is_disk "$disk_path"; then
+    echo '{"ok":false,"error":"target must be a whole-disk block device"}'
+    exit 1
+  fi
+
+  if device_has_mounts "$disk_path"; then
+    echo '{"ok":false,"error":"target disk or child partitions are mounted"}'
+    exit 1
+  fi
+
+  local boot_partition
+  local root_partition
+  local target_root
+  local log_file
+  boot_partition="$(boot_partition_path "$disk_path")"
+  root_partition="$(root_partition_path "$disk_path")"
+  target_root="${TARGET_ROOT_BASE}.$$"
+  log_file="$(mktemp)"
+  mkdir -p "$target_root"
+
+  cleanup() {
+    unbind_mounts "$target_root"
+    umount -lf "$target_root/boot/efi" >/dev/null 2>&1 || true
+    umount -lf "$target_root" >/dev/null 2>&1 || true
+    rmdir "$target_root/boot/efi" >/dev/null 2>&1 || true
+    rmdir "$target_root/boot" >/dev/null 2>&1 || true
+    rmdir "$target_root" >/dev/null 2>&1 || true
+  }
+  trap cleanup EXIT
+
+  {
+    echo "[installer] Wiping and partitioning $disk_path"
+    parted -s "$disk_path" mklabel gpt
+    parted -s "$disk_path" mkpart ESP fat32 1MiB 513MiB
+    parted -s "$disk_path" set 1 esp on
+    parted -s "$disk_path" mkpart primary ext4 513MiB 100%
+    partprobe "$disk_path"
+    sleep 2
+
+    echo "[installer] Formatting target filesystems"
+    mkfs.vfat -F32 "$boot_partition"
+    mkfs.ext4 -F "$root_partition"
+
+    echo "[installer] Mounting target root"
+    mount "$root_partition" "$target_root"
+    mkdir -p "$target_root/boot/efi"
+    mount "$boot_partition" "$target_root/boot/efi"
+
+    echo "[installer] Copying live filesystem"
+    local exclude_args=()
+    local item
+    for item in "${PAYLOAD_EXCLUDES[@]}"; do
+      exclude_args+=( "--exclude=$item" )
+    done
+    rsync -aAX --delete "${exclude_args[@]}" / "$target_root/"
+
+    echo "[installer] Preparing target metadata"
+    write_fstab "$target_root" "$boot_partition" "$root_partition"
+    echo "tornlinux" > "$target_root/etc/hostname"
+
+    echo "[installer] Installing GRUB"
+    bind_mounts "$target_root"
+    chroot "$target_root" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=TornLinux --recheck
+    chroot "$target_root" update-grub
+  } >>"$log_file" 2>&1
+
+  local logs
+  logs="$(cat "$log_file")"
+  rm -f "$log_file"
+  local escaped_logs
+  escaped_logs="$(json_escape "$logs")"
+  echo "{\"ok\":true,\"mode\":\"$mode\",\"targetDisk\":\"$disk_path\",\"logs\":$escaped_logs}"
+}
+
+case "$command_name" in
+  list-disks)
+    list_disks
+    ;;
+  preview-plan)
+    preview_plan "${1:-}" "${2:-auto}"
+    ;;
+  apply-plan)
+    apply_plan "${1:-}" "${2:-auto}" "${3:-}"
+    ;;
+  *)
+    echo '{"ok":false,"error":"unknown command"}'
+    exit 1
+    ;;
+esac

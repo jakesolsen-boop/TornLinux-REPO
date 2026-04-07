@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { AppConfig, AppSettings } from '@shared/types';
+import type { AppConfig, AppSettings, DisplayState, PowerAction } from '@shared/types';
 
 type Props = {
   open: boolean;
@@ -23,6 +23,9 @@ export function SettingsDrawer({
   const [volume, setVolume] = useState(50);
   const [form, setForm] = useState(currentSettings);
   const [config, setConfig] = useState<AppConfig>({ tornApiKey: '', tornStatsApiKey: '' });
+  const [displayState, setDisplayState] = useState<DisplayState | null>(null);
+  const [displayBusy, setDisplayBusy] = useState('');
+  const [powerBusy, setPowerBusy] = useState<PowerAction | ''>('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -34,11 +37,28 @@ export function SettingsDrawer({
     if (!open) return;
     window.tornlinux?.getSystemVolume?.().then((v: number) => setVolume(v)).catch(() => undefined);
     window.tornlinux?.getConfig?.().then((value) => setConfig(value || {})).catch(() => undefined);
+    window.tornlinux?.getDisplayState?.().then((value) => setDisplayState(value || null)).catch(() => undefined);
   }, [open]);
 
   const changeVolume = async (v: number) => {
     setVolume(v);
     await window.tornlinux?.setSystemVolume?.(v);
+  };
+
+  const applyDisplayMode = async (mode: string) => {
+    setDisplayBusy(mode);
+    const result = await window.tornlinux?.setDisplayMode?.(mode);
+    const nextState = await window.tornlinux?.getDisplayState?.();
+    setDisplayState(nextState || null);
+    setDisplayBusy('');
+    setMessage(result?.ok ? `Resolution set to ${mode}` : 'Resolution change failed');
+  };
+
+  const runPowerAction = async (action: PowerAction) => {
+    setPowerBusy(action);
+    const result = await window.tornlinux?.powerAction?.(action);
+    setPowerBusy('');
+    setMessage(result?.ok ? `${action} started` : `${action} unavailable`);
   };
 
   const save = async () => {
@@ -167,6 +187,46 @@ export function SettingsDrawer({
             value={volume}
             onChange={(e) => changeVolume(Number(e.target.value))}
           />
+        </div>
+
+        <div className="tsd-section">
+          <label>Display Resolution</label>
+          {displayState?.modes?.length ? (
+            <div className="tsd-actionGrid">
+              {displayState.modes.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`tsd-actionButton ${displayState.currentMode === mode ? 'is-current' : ''}`}
+                  onClick={() => void applyDisplayMode(mode)}
+                  disabled={displayBusy === mode}
+                >
+                  <span>{mode}</span>
+                  {displayState.currentMode === mode ? <strong>Current</strong> : null}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="tsd-inlineMessage">No display modes available.</div>
+          )}
+        </div>
+
+        <div className="tsd-section">
+          <label>Power</label>
+          <div className="tsd-actionGrid">
+            <button type="button" className="tsd-actionButton" onClick={() => void runPowerAction('reload')} disabled={powerBusy === 'reload'}>
+              <span>Reload</span>
+              <strong>Refresh app shell</strong>
+            </button>
+            <button type="button" className="tsd-actionButton" onClick={() => void runPowerAction('restart')} disabled={powerBusy === 'restart'}>
+              <span>Restart</span>
+              <strong>Reboot system</strong>
+            </button>
+            <button type="button" className="tsd-actionButton is-danger" onClick={() => void runPowerAction('shutdown')} disabled={powerBusy === 'shutdown'}>
+              <span>Shutdown</span>
+              <strong>Power off system</strong>
+            </button>
+          </div>
         </div>
 
         <div className="tsd-footer">

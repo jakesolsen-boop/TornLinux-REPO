@@ -191,23 +191,24 @@ export function TornLinuxHeader({
         </div>
 
         <div className="tlActionRow">
+          <div className="tlActionIconRow">
+            <button
+              className={`tlAction tlAction--icon tlAction--network ${networkOnline ? "isOnline" : "isOffline"}`}
+              onClick={onOpenNetworkSettings}
+              type="button"
+              aria-label={networkOnline ? "Network status online" : "Network status offline"}
+            >
+              <NetworkStatusIcon className="tlActionIconSvg" />
+            </button>
+
+            <button className="tlAction tlAction--icon tlAction--settings" onClick={onOpenSettings} type="button" aria-label="Open settings">
+              <SettingsIcon className="tlActionIconSvg" />
+            </button>
+          </div>
+
           <button className="tlAction tlAction--tornstats" onClick={onToggleTornStats} type="button" aria-label="Open TornStats">
             <TornStatsIcon className="tlActionIconSvg" />
             <span className="tlActionLabel">TornStats</span>
-          </button>
-          <button
-            className={`tlAction tlAction--network ${networkOnline ? "isOnline" : "isOffline"}`}
-            onClick={onOpenNetworkSettings}
-            type="button"
-            aria-label={networkOnline ? "Network status online" : "Network status offline"}
-          >
-            <NetworkStatusIcon className="tlActionIconSvg" />
-            <span className="tlActionLabel">{networkOnline ? "Online" : "Offline"}</span>
-          </button>
-
-          <button className="tlAction tlAction--settings" onClick={onOpenSettings} type="button" aria-label="Open settings">
-            <SettingsIcon className="tlActionIconSvg" />
-            <span className="tlActionLabel">Settings</span>
           </button>
         </div>
       </div>

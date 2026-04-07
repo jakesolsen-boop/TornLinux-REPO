@@ -8,6 +8,7 @@ const { isAllowedEmbedUrl, isAllowedExternalUrl } = require('./runtime/webview-p
 const { getUnifiedState } = require('./runtime/unified-state.cjs');
 
 const { version: APP_VERSION } = require(path.join(__dirname, '..', 'package.json'));
+const INSTALLER_SCRIPT = '/usr/local/bin/tornlinux-installer';
 
 function resolveRendererIndex() {
   return path.join(__dirname, '..', 'dist', 'renderer', 'index.html');
@@ -125,6 +126,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+ipcMain.handle('tornlinux:getAppVersion', async () => APP_VERSION);
 ipcMain.handle(IPC_CHANNELS.GET_SETTINGS, async () => settingsStore.read());
 ipcMain.handle(IPC_CHANNELS.SET_SETTINGS, async (_event, partial) => settingsStore.write(partial));
 ipcMain.handle(IPC_CHANNELS.TOGGLE_LAYOUT, async () => {
@@ -206,6 +208,81 @@ function setSystemVolume(value) {
   });
 }
 
+function getPrimaryWindow() {
+  return BrowserWindow.getAllWindows()[0] || null;
+}
+
+function parseDisplayState(stdout) {
+  const text = String(stdout || '');
+  const lines = text.split('\n');
+  let currentOutput = null;
+  let fallbackOutput = null;
+  let isCollectingModes = false;
+  let currentMode = '';
+  const modes = [];
+
+  for (const line of lines) {
+    const outputMatch = line.match(/^(\S+)\s+connected(?:\s+primary)?/);
+    if (outputMatch) {
+      const output = outputMatch[1];
+      if (!fallbackOutput) fallbackOutput = output;
+      if (!currentOutput || /\sconnected\s+primary/.test(line)) {
+        currentOutput = output;
+      }
+      isCollectingModes = (currentOutput === output);
+      continue;
+    }
+
+    if (!isCollectingModes) continue;
+    if (!/^\s+\d+x\d+/.test(line)) continue;
+
+    const modeMatch = line.match(/^\s+(\d+x\d+)/);
+    if (!modeMatch) continue;
+    const mode = modeMatch[1];
+    modes.push(mode);
+    if (line.includes('*')) currentMode = mode;
+  }
+
+  const output = currentOutput || fallbackOutput;
+  if (!output || modes.length === 0) return null;
+
+  return {
+    output,
+    currentMode: currentMode || modes[0],
+    modes: Array.from(new Set(modes)),
+  };
+}
+
+function getDisplayState() {
+  return new Promise((resolve) => {
+    execFile('xrandr', ['--query'], { timeout: 4000 }, (error, stdout) => {
+      if (error) {
+        resolve(null);
+        return;
+      }
+      resolve(parseDisplayState(stdout));
+    });
+  });
+}
+
+function setDisplayMode(mode) {
+  return new Promise(async (resolve) => {
+    const display = await getDisplayState();
+    if (!display || !display.output || !display.modes.includes(mode)) {
+      resolve({ ok: false, mode, output: display?.output });
+      return;
+    }
+
+    execFile('xrandr', ['--output', display.output, '--mode', mode], { timeout: 5000 }, (error) => {
+      if (error) {
+        resolve({ ok: false, mode, output: display.output });
+        return;
+      }
+      resolve({ ok: true, mode, output: display.output });
+    });
+  });
+}
+
 function spawnFirstAvailable(candidates) {
   return new Promise((resolve) => {
     const tryNext = (index) => {
@@ -214,11 +291,20 @@ function spawnFirstAvailable(candidates) {
         return;
       }
       const candidate = candidates[index];
-      execFile(candidate.command, candidate.args || [], { detached: true }, (error) => {
-        if (error) {
-          tryNext(index + 1);
-          return;
-        }
+      let child;
+      try {
+        child = spawn(candidate.command, candidate.args || [], {
+          detached: true,
+          stdio: 'ignore',
+        });
+      } catch (_error) {
+        tryNext(index + 1);
+        return;
+      }
+
+      child.once('error', () => tryNext(index + 1));
+      child.once('spawn', () => {
+        child.unref();
         resolve({ ok: true, method: candidate.name });
       });
     };
@@ -226,34 +312,165 @@ function spawnFirstAvailable(candidates) {
   });
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value <= 0) return 'Unknown';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let unit = 0;
+  let size = value;
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit += 1;
+  }
+  return `${size >= 100 ? Math.round(size) : size.toFixed(size >= 10 ? 1 : 2)} ${units[unit]}`;
+}
+
+function parseInstallerDisks(payload) {
+  const data = JSON.parse(String(payload || '{}'));
+  const devices = Array.isArray(data.blockdevices) ? data.blockdevices : [];
+  return devices
+    .filter((device) => device.type === 'disk')
+    .map((device) => ({
+      name: String(device.name || ''),
+      path: String(device.path || ''),
+      sizeBytes: Number(device.size || 0),
+      sizeLabel: formatBytes(device.size),
+      model: String(device.model || '').trim(),
+      vendor: String(device.vendor || '').trim(),
+      transport: String(device.tran || '').trim(),
+      removable: Boolean(Number(device.rm || 0)),
+      hotplug: Boolean(Number(device.hotplug || 0)),
+      mountpoints: [device.mountpoint].filter(Boolean).map(String),
+      children: Array.isArray(device.children)
+        ? device.children.map((child) => ({
+            name: String(child.name || ''),
+            path: String(child.path || ''),
+            sizeBytes: Number(child.size || 0),
+            sizeLabel: formatBytes(child.size),
+            fstype: String(child.fstype || ''),
+            mountpoint: String(child.mountpoint || ''),
+          }))
+        : [],
+    }));
+}
+
+function runInstallerJson(args) {
+  return new Promise((resolve, reject) => {
+    execFile(INSTALLER_SCRIPT, args, { timeout: 5000 }, (error, stdout) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(String(stdout || '').trim());
+    });
+  });
+}
+
+async function getInstallerDisks() {
+  try {
+    const payload = await runInstallerJson(['list-disks']);
+    return parseInstallerDisks(payload);
+  } catch (_error) {
+    return [];
+  }
+}
+
+async function previewInstallerPlan(diskPath, mode) {
+  try {
+    const payload = await runInstallerJson(['preview-plan', diskPath, mode]);
+    return JSON.parse(payload);
+  } catch (_error) {
+    return {
+      ok: false,
+      mode,
+      targetDisk: diskPath,
+      operations: [],
+      error: 'Unable to build installer plan',
+    };
+  }
+}
+
+async function applyInstallerPlan(diskPath, mode, confirmation) {
+  try {
+    const payload = await new Promise((resolve, reject) => {
+      execFile('sudo', [INSTALLER_SCRIPT, 'apply-plan', diskPath, mode, confirmation], { timeout: 60 * 60 * 1000 }, (error, stdout) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(String(stdout || '').trim());
+      });
+    });
+    return JSON.parse(payload);
+  } catch (_error) {
+    return {
+      ok: false,
+      mode,
+      targetDisk: diskPath,
+      error: 'Unable to apply installer plan',
+    };
+  }
+}
+
 ipcMain.handle('tornlinux:launchSoundSettings', async () => {
   return spawnFirstAvailable([
     { name: 'pavucontrol', command: 'pavucontrol', args: [] },
-    { name: 'xterm-alsamixer', command: 'xterm', args: ['-e', 'alsamixer'] }
   ]);
 });
 
 ipcMain.handle('tornlinux:launchNetworkSettings', async () => {
   return spawnFirstAvailable([
     { name: 'nm-connection-editor', command: 'nm-connection-editor', args: [] },
-    { name: 'xterm-nmtui', command: 'xterm', args: ['-e', 'nmtui'] }
   ]);
 });
 
 ipcMain.handle('tornlinux:getNetworkStatus', async () => getNetworkStatus());
+ipcMain.handle('tornlinux:getDisplayState', async () => getDisplayState());
+ipcMain.handle('tornlinux:setDisplayMode', async (_event, mode) => setDisplayMode(String(mode || '').trim()));
+ipcMain.handle('tornlinux:powerAction', async (_event, action) => {
+  const normalized = String(action || '').trim().toLowerCase();
+  if (normalized === 'reload') {
+    const win = getPrimaryWindow();
+    if (!win) return { ok: false, action: 'reload', method: 'window-missing' };
+    win.webContents.reloadIgnoringCache();
+    return { ok: true, action: 'reload', method: 'electron-reload' };
+  }
 
-ipcMain.handle('tornlinux:launchInstaller', async () => {
-  return spawnFirstAvailable([
-    { name: 'calamares', command: 'calamares', args: [] },
-    { name: 'xterm-calamares', command: 'xterm', args: ['-e', 'calamares'] }
-  ]);
+  if (normalized === 'restart') {
+    const result = await spawnFirstAvailable([
+      { name: 'systemctl-reboot', command: 'systemctl', args: ['reboot'] },
+      { name: 'reboot', command: 'reboot', args: [] },
+    ]);
+    return { ...result, action: 'restart' };
+  }
+
+  if (normalized === 'shutdown') {
+    const result = await spawnFirstAvailable([
+      { name: 'systemctl-poweroff', command: 'systemctl', args: ['poweroff'] },
+      { name: 'poweroff', command: 'poweroff', args: [] },
+    ]);
+    return { ...result, action: 'shutdown' };
+  }
+
+  return { ok: false, action: normalized || 'reload', method: 'unsupported' };
 });
 
 ipcMain.handle('tornlinux:launchBluetoothSettings', async () => {
   return spawnFirstAvailable([
     { name: 'blueman-manager', command: 'blueman-manager', args: [] },
-    { name: 'xterm-bluetoothctl', command: 'xterm', args: ['-e', 'bluetoothctl'] }
   ]);
+});
+
+ipcMain.handle('tornlinux:getInstallerDisks', async () => getInstallerDisks());
+ipcMain.handle('tornlinux:previewInstallerPlan', async (_event, diskPath, mode) => {
+  return previewInstallerPlan(String(diskPath || '').trim(), String(mode || 'auto').trim());
+});
+ipcMain.handle('tornlinux:applyInstallerPlan', async (_event, diskPath, mode, confirmation) => {
+  return applyInstallerPlan(
+    String(diskPath || '').trim(),
+    String(mode || 'auto').trim(),
+    String(confirmation || '')
+  );
 });
 
 ipcMain.handle('tornlinux:getSystemVolume', async () => getSystemVolume());

@@ -450,8 +450,10 @@
   <body>
     <div id="app"></div>
     <script>
-      const TORN_API_KEY = "t12kBJHUoufNNdqD";
-      const TORNSTATS_API_KEY = "TS_qc78C8jaoFHfSprD";
+      const STORAGE_KEYS = {
+        tornApiKey: "tornlinux.preview.tornApiKey",
+        tornStatsApiKey: "tornlinux.preview.tornStatsApiKey"
+      };
 
       const initialState = {
         tct: "--:--:--",
@@ -463,6 +465,8 @@
         networkOpen: false,
         networkOnline: true,
         embedState: "Unverified",
+        tornApiKey: localStorage.getItem(STORAGE_KEYS.tornApiKey) || "",
+        tornStatsApiKey: localStorage.getItem(STORAGE_KEYS.tornStatsApiKey) || "",
         stats: {
           battleStats: "Loading",
           netWorth: "Loading",
@@ -694,12 +698,12 @@
                   <input id="discord-url" value="${currentState.discordUrl}" />
                 </div>
                 <div class="field">
-                  <label>Torn API Key</label>
-                  <input value="${TORN_API_KEY}" readonly />
+                  <label for="torn-api-key">Torn API Key</label>
+                  <input id="torn-api-key" value="${currentState.tornApiKey}" />
                 </div>
                 <div class="field">
-                  <label>TornStats API Key</label>
-                  <input value="${TORNSTATS_API_KEY}" readonly />
+                  <label for="tornstats-api-key">TornStats API Key</label>
+                  <input id="tornstats-api-key" value="${currentState.tornStatsApiKey}" />
                 </div>
                 <div class="field">
                   <label>Network State</label>
@@ -801,6 +805,26 @@
           });
         }
 
+        const tornApiKey = document.getElementById("torn-api-key");
+        if (tornApiKey) {
+          tornApiKey.addEventListener("change", (event) => {
+            const value = event.target.value.trim();
+            localStorage.setItem(STORAGE_KEYS.tornApiKey, value);
+            setState({ tornApiKey: value });
+            loadTornStats();
+          });
+        }
+
+        const tornStatsApiKey = document.getElementById("tornstats-api-key");
+        if (tornStatsApiKey) {
+          tornStatsApiKey.addEventListener("change", (event) => {
+            const value = event.target.value.trim();
+            localStorage.setItem(STORAGE_KEYS.tornStatsApiKey, value);
+            setState({ tornStatsApiKey: value });
+            loadTornStats();
+          });
+        }
+
         const tornFrame = document.getElementById("torn-frame");
         if (tornFrame) {
           tornFrame.addEventListener("load", () => setState({ embedState: "Loaded" }));
@@ -856,13 +880,31 @@
       }
 
       async function loadTornStats() {
+        const tornApiKey = state.tornApiKey.trim();
+        const tornStatsApiKey = state.tornStatsApiKey.trim();
+        if (!tornApiKey || !tornStatsApiKey) {
+          setState({
+            stats: {
+              battleStats: "Needs Keys",
+              netWorth: "Needs Keys",
+              fairFight: "Needs Keys",
+              freshness: "Needs Keys",
+              attacksWon: "Needs Keys",
+              defendsWon: "Needs Keys",
+              xanaxTaken: "Needs Keys",
+              refills: "Needs Keys"
+            }
+          });
+          return;
+        }
+
         try {
-          const userResp = await fetch(`https://api.torn.com/user/?selections=basic,battlestats,networth,personalstats,bars&key=${TORN_API_KEY}`);
+          const userResp = await fetch(`https://api.torn.com/user/?selections=basic,battlestats,networth,personalstats,bars&key=${encodeURIComponent(tornApiKey)}`);
           const userData = await userResp.json();
           const userKey = encodeURIComponent(userData?.player_id || userData?.name || "self");
           const [spyResp, graphResp] = await Promise.all([
-            fetch(`https://www.tornstats.com/api/v2/${TORNSTATS_API_KEY}/spy/user/${userKey}`),
-            fetch(`https://www.tornstats.com/api/v2/${TORNSTATS_API_KEY}/battlestats/graph`)
+            fetch(`https://www.tornstats.com/api/v2/${encodeURIComponent(tornStatsApiKey)}/spy/user/${userKey}`),
+            fetch(`https://www.tornstats.com/api/v2/${encodeURIComponent(tornStatsApiKey)}/battlestats/graph`)
           ]);
           const spy = await spyResp.json();
           const graph = await graphResp.json();

@@ -1,5 +1,5 @@
 :root {
-  --tl-header-h: 140px;
+  --tl-header-h: 100px;
   --tl-header-pad-x: 30px;
   --tl-radius-sm: 10px;
   --tl-radius-md: 14px;
@@ -15,7 +15,7 @@
   --tl-icon-20: 20px;
   --tl-icon-64: 64px;
   --tl-stat-icon: 20px;
-  --tl-right-w: 132px;
+  --tl-right-w: 118px;
   --tl-bg-0: #040914;
   --tl-bg-1: #071325;
   --tl-panel: rgba(15, 29, 54, 0.74);
@@ -36,7 +36,7 @@
   --tl-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --tl-accent-line: rgba(92, 200, 255, 0.42);
   --tl-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-  --tl-size-brand: 40px;
+  --tl-size-brand: 32px;
   --tl-size-sub: 14px;
   --tl-size-chip: 14px;
   --tl-size-stat: 15px;

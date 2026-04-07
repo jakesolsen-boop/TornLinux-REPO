@@ -25,7 +25,6 @@ type EntryMode = 'live' | 'install';
 
 const ENTRY_MODE_KEY = 'tornlinux.entry.lastMode';
 const FIRST_RUN_KEY = 'tornlinux.firstRunComplete';
-const SEEDED_KEY = 't12kBJHUoufNNdqD';
 
 export function App() {
   const [settings, setSettings] = useState({
@@ -122,7 +121,6 @@ export function App() {
     const key = String(apiKey || '').trim();
     await window.tornlinux?.saveConfig({
       tornApiKey: key,
-      seededBuildVersion: key === SEEDED_KEY ? '1.5.0' : undefined,
     });
     await reloadState();
   };

@@ -1,18 +1,13 @@
-# TornLinux Deployment-Ready Project 1.1.0
+# TornLinux Deployment-Ready Project 1.5.2
 
-This release advances the Command Center to 1.1.0 with a cleaner status model, stronger release hygiene, and safer ISO build guardrails.
+This tree is the current `1.5.2` test build for TornLinux. It carries the active Electron shell, live-build packaging, dual-key Torn and TornStats integration, and the current header and overlay work.
 
-## Included in 1.1.0
+## Current Focus
 
-- Happiness removed from the header contract and UI
-- Header prop contract aligned with the renderer call site
-- Unified status model upgraded from a flat string to a structured object
-- Single status chip added with dynamic icons for okay, hospital, jail, travel, abroad, and offline states
-- Countdown display added for timed statuses when Torn provides `until`
-- Electron window fallback display path added for easier boot debugging
-- Renderer load and process failure logging added
-- Preflight build check script added
-- Implementation flow updated to require live-build staging before ISO creation
+- Dual API-key setup for Torn and TornStats
+- Richer header and TornStats popup overlay
+- Electron shell plus live-build ISO pipeline
+- Local preview page for layout and flow checks
 
 ## Required human steps
 

@@ -5,6 +5,7 @@ const path = require('node:path');
 const DEFAULT_SETTINGS = {
   layoutMode: 'split',
   discordWidth: 480,
+  timezone: 'America/Chicago',
   tornUrl: 'https://www.torn.com/',
   discordUrl: 'https://discord.com/app',
   refreshIntervalMs: 30000,
@@ -27,6 +28,7 @@ class FileSettingsStore {
       return {
         layoutMode: parsed.layoutMode === 'torn' ? 'torn' : 'split',
         discordWidth: typeof parsed.discordWidth === 'number' ? parsed.discordWidth : DEFAULT_SETTINGS.discordWidth,
+        timezone: typeof parsed.timezone === 'string' && parsed.timezone.trim() ? parsed.timezone : DEFAULT_SETTINGS.timezone,
         tornUrl: typeof parsed.tornUrl === 'string' ? parsed.tornUrl : DEFAULT_SETTINGS.tornUrl,
         discordUrl: typeof parsed.discordUrl === 'string' ? parsed.discordUrl : DEFAULT_SETTINGS.discordUrl,
         refreshIntervalMs: typeof parsed.refreshIntervalMs === 'number' ? Math.max(30000, parsed.refreshIntervalMs) : DEFAULT_SETTINGS.refreshIntervalMs,

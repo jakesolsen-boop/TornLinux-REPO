@@ -12,12 +12,42 @@ warn() {
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
+CURRENT_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
+
+resolve_asset_source() {
+  local kind="$1"
+  local candidates=()
+  if [[ "$kind" == "splash" ]]; then
+    candidates=(
+      "$PROJECT_ROOT/assets/master/splash.png"
+      "$PROJECT_ROOT/assets/splash/splash_${CURRENT_VERSION}.png"
+      "$PROJECT_ROOT/assets/splash/splash_1.3.11.png"
+      "$PROJECT_ROOT/assets/splash/splash_1.3.5.png"
+    )
+  else
+    candidates=(
+      "$PROJECT_ROOT/assets/master/wallpaper.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_${CURRENT_VERSION}.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.11.png"
+      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.5.png"
+    )
+  fi
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
 
 echo "[preflight] Project root: $PROJECT_ROOT"
-PREFLIGHT_SUMMARY="$PROJECT_ROOT/PREFLIGHT_SUMMARY_DONOR_HYBRID.txt"
+PREFLIGHT_SUMMARY="$PROJECT_ROOT/PREFLIGHT_SUMMARY_${CURRENT_VERSION}.txt"
 : > "$PREFLIGHT_SUMMARY"
 summary(){ echo "$1" | tee -a "$PREFLIGHT_SUMMARY"; }
-summary "TornLinux Preflight Summary (donor hybrid)"
+summary "TornLinux Preflight Summary ${CURRENT_VERSION}"
 summary "Project root: $PROJECT_ROOT"
 
 [[ -d "$PROJECT_ROOT/live-build/config" ]] || fail "live-build/config not found. Run this from the official project root."
@@ -42,6 +72,8 @@ node -c "$PROJECT_ROOT/electron/preload.cjs" >/dev/null 2>&1 || fail "electron/p
 required_files=(
   "live-build/config/package-lists/tornlinux.list.chroot"
   "live-build/config/package-lists/tornlinux-electron-runtime.list.chroot"
+  "live-build/config/includes.binary/boot/grub/grub.cfg"
+  "live-build/config/includes.binary/isolinux/live.cfg"
   "live-build/config/includes.chroot/etc/live/config.conf.d/tornlinux.conf"
   "live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf"
   "live-build/config/hooks/live/0100-tornlinux-setup.chroot"
@@ -57,9 +89,12 @@ done
 [[ -x "$PROJECT_ROOT/scripts/preflight-check.sh" ]] || fail "scripts/preflight-check.sh is not executable"
 [[ -x "$PROJECT_ROOT/scripts/configure-live-build.sh" ]] || fail "scripts/configure-live-build.sh is not executable"
 [[ -x "$PROJECT_ROOT/scripts/build-iso.sh" ]] || fail "scripts/build-iso.sh is not executable"
+[[ -x "$PROJECT_ROOT/scripts/write-usb.sh" ]] || fail "scripts/write-usb.sh is not executable"
 
-[[ -f "$PROJECT_ROOT/assets/master/splash.png" ]] || fail "master splash missing"
-[[ -f "$PROJECT_ROOT/assets/master/wallpaper.png" ]] || fail "master wallpaper missing"
+SPLASH_SOURCE="$(resolve_asset_source splash)" || fail "No splash asset source found"
+WALLPAPER_SOURCE="$(resolve_asset_source wallpaper)" || fail "No wallpaper asset source found"
+summary "Using splash source: $SPLASH_SOURCE"
+summary "Using wallpaper source: $WALLPAPER_SOURCE"
 
 grep -qs 'cp -a "\$APP_DIR"/\. "\$TARGET_DIR"/' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not using deterministic staged app copy"
 grep -qs 'chmod -R 755 "\$TARGET_DIR"' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not applying staged app execute permissions"
@@ -69,7 +104,8 @@ grep -qs 'bash ./scripts/stamp-assets.sh' "$PROJECT_ROOT/scripts/prepare-live-bu
 grep -qs "launchNetworkSettings" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing launchNetworkSettings"
 grep -qs "getNetworkStatus" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing getNetworkStatus"
 grep -qs "launchBluetoothSettings" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing launchBluetoothSettings"
-grep -qs "launchInstaller" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing launchInstaller"
+grep -qs "getInstallerDisks" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing getInstallerDisks"
+grep -qs "previewInstallerPlan" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing previewInstallerPlan"
 grep -qs "getSystemVolume" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing getSystemVolume"
 grep -qs "setSystemVolume" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing setSystemVolume"
 
@@ -86,8 +122,6 @@ grep -qs '^bluez$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list
 grep -qs '^pipewire$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "pipewire missing from tornlinux.list.chroot"
 grep -qs '^pipewire-pulse$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "pipewire-pulse missing from tornlinux.list.chroot"
 grep -qs '^wireplumber$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "wireplumber missing from tornlinux.list.chroot"
-grep -qs '^calamares$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "calamares missing from tornlinux.list.chroot"
-
 grep -qs 'LIVE_USERNAME="tornuser"' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/live/config.conf.d/tornlinux.conf" || fail "LIVE_USERNAME override missing or incorrect"
 grep -qs 'autologin-user=tornuser' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf" || fail "LightDM autologin user missing or incorrect"
 grep -qs 'autologin-session=openbox' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf" || fail "LightDM autologin session missing or incorrect"
@@ -97,7 +131,6 @@ grep -qs 'mkdir -p /var/lib/lightdm/data' "$PROJECT_ROOT/live-build/config/hooks
 grep -qs 'touch /home/tornuser/.Xauthority' "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "hook does not create .Xauthority"
 grep -qs "echo 'tornuser:tornlinux' | chpasswd" "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "Hook does not set tornuser password"
 
-CURRENT_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
 summary "Validating version propagation integrity"
 grep -qs "^${CURRENT_VERSION}$" "$PROJECT_ROOT/VERSION" || fail "VERSION file unreadable"
 [[ -f "$PROJECT_ROOT/live-build/config/includes.chroot/opt/tornlinux-app/version" ]] || warn "staged app version marker not present yet; run prepare-live-build.sh first"

@@ -7,8 +7,9 @@ fail() {
 }
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
 LIVE_BUILD_DIR="$PROJECT_ROOT/live-build"
-REPORT="$PROJECT_ROOT/POST_BUILD_VALIDATION_1.3.14.txt"
+REPORT="$PROJECT_ROOT/POST_BUILD_VALIDATION_${VERSION}.txt"
 : > "$REPORT"
 
 log() {
@@ -17,7 +18,7 @@ log() {
 
 cd "$LIVE_BUILD_DIR"
 
-log "TornLinux Post-Build Validation v1.3.14"
+log "TornLinux Post-Build Validation v${VERSION}"
 log "Live-build root: $LIVE_BUILD_DIR"
 
 ISO_COUNT=$(find . -maxdepth 1 -type f -name '*.iso' | wc -l | tr -d ' ')

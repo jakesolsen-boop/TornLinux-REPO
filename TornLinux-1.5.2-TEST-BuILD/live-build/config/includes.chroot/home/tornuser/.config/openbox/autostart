@@ -1,0 +1,11 @@
+#!/bin/sh
+
+xset -dpms
+xset s off
+xset s noblank
+
+/usr/local/bin/tornlinux-session-start &
+
+if command -v xfce4-power-manager >/dev/null 2>&1; then
+  xfce4-power-manager >/dev/null 2>&1 &
+fi

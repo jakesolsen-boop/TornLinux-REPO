@@ -1,0 +1,256 @@
+.tls-landingRoot,
+.tls-installerRoot {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(103, 187, 255, 0.12), transparent 22%),
+    linear-gradient(180deg, #0d1729, #050b14);
+}
+
+.tls-landingCard,
+.tls-installerCard {
+  position: relative;
+  width: min(760px, 100%);
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid rgba(150, 180, 221, 0.18);
+  background: rgba(12, 22, 40, 0.88);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.tls-landingEyebrow,
+.tls-landingLabel,
+.tls-installerEyebrow,
+.tls-landingText,
+.tls-installerText {
+  color: rgba(208, 221, 242, 0.78);
+}
+
+.tls-landingEyebrow,
+.tls-installerEyebrow,
+.tls-landingLabel {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tls-landingTitle,
+.tls-installerTitle {
+  margin: 10px 0 12px;
+  font-size: 38px;
+  line-height: 1;
+  color: #edf4ff;
+}
+
+.tls-landingText,
+.tls-installerText {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.tls-landingSection {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tls-landingRow,
+.tls-landingActions,
+.tls-installerActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tls-landingInput,
+.tls-landingSection button,
+.tls-installerActions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(150, 180, 221, 0.18);
+  background: rgba(18, 30, 52, 0.92);
+  color: #edf4ff;
+  font: inherit;
+}
+
+.tls-landingInput {
+  width: 100%;
+}
+
+.tls-networkBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(150, 180, 221, 0.18);
+  background: rgba(18, 30, 52, 0.92);
+}
+
+.tls-networkBadge.is-online {
+  color: #72d977;
+}
+
+.tls-networkBadge.is-offline {
+  color: #ff6b7f;
+}
+
+.tls-landingContinue {
+  border-color: rgba(103, 187, 255, 0.34);
+  background: rgba(20, 44, 78, 0.96);
+}
+
+.tls-installerChecklist {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 18px;
+}
+
+.tls-installerModeRow {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 16px;
+}
+
+.tls-installerModeRow button,
+.tls-installerDisk {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(150, 180, 221, 0.18);
+  background: rgba(18, 30, 52, 0.92);
+  color: #edf4ff;
+  font: inherit;
+}
+
+.tls-installerModeRow button.is-current,
+.tls-installerDisk.is-current {
+  border-color: rgba(103, 187, 255, 0.34);
+  background: rgba(20, 44, 78, 0.96);
+}
+
+.tls-installerDiskList,
+.tls-installerPlanList {
+  display: grid;
+  gap: 10px;
+}
+
+.tls-installerDisk {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.tls-installerDisk strong,
+.tls-installerPlanTitle,
+.tls-installerPlanList strong {
+  color: #edf4ff;
+}
+
+.tls-installerDisk em,
+.tls-installerPlanList em {
+  color: rgba(208, 221, 242, 0.62);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.tls-installerPlan {
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(150, 180, 221, 0.14);
+  background: rgba(14, 24, 40, 0.76);
+}
+
+.tls-installerPlanTitle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tls-installerPlanList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tls-installerConfirm {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.tls-installerConfirm label {
+  color: rgba(208, 221, 242, 0.8);
+  font-size: 13px;
+}
+
+.tls-installerConfirm input {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(150, 180, 221, 0.18);
+  background: rgba(18, 30, 52, 0.92);
+  color: #edf4ff;
+  font: inherit;
+}
+
+.tls-installerLogs {
+  margin: 18px 0 0;
+  max-height: 240px;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(150, 180, 221, 0.12);
+  background: rgba(6, 10, 16, 0.86);
+  color: #d5e3f5;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.tls-installerPlanList li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(150, 180, 221, 0.08);
+}
+
+.tls-installerPlanList li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.tls-installerStep {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(150, 180, 221, 0.14);
+  background: rgba(14, 24, 40, 0.76);
+}
+
+.tls-installerStep strong {
+  color: #edf4ff;
+  font-size: 14px;
+}
+
+.tls-installerStep span,
+.tls-installerNote {
+  color: rgba(208, 221, 242, 0.76);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tls-installerNote {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(150, 180, 221, 0.12);
+}

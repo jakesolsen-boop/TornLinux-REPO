@@ -1,10 +1,12 @@
 import React from 'react';
 
 export function EntryScreen({
+  version,
   initialMode,
   onRunLive,
   onInstall,
 }: {
+  version: string;
   initialMode: 'live' | 'install';
   onRunLive: () => void;
   onInstall: () => void;
@@ -17,6 +19,19 @@ export function EntryScreen({
         <p className="tls-entryText">
           Start TornLinux in the live environment, or launch the installer to deploy it to disk.
         </p>
+
+        <div className="tls-entryInfo">
+          <strong>Persistence</strong>
+          <p>
+            Persistence keeps your TornLinux settings, API keys, and other live-session data on a writable USB
+            persistence partition so they survive reboot. Without persistence, live mode resets to a clean state every
+            time.
+          </p>
+          <p>
+            Use the boot menu entry named <span>TornLinux Live (Persistence)</span> when your USB has a persistence
+            partition configured.
+          </p>
+        </div>
 
         <div className="tls-entryActions">
           <button
@@ -34,6 +49,8 @@ export function EntryScreen({
             Install TornLinux
           </button>
         </div>
+
+        <div className="tls-entryStamp">{version}</div>
       </div>
     </div>
   );
