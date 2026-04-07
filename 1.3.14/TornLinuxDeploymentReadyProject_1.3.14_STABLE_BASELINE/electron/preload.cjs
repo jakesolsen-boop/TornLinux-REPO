@@ -13,4 +13,10 @@ contextBridge.exposeInMainWorld('tornlinux', {
   getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.GET_CONFIG),
   saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_CONFIG, config),
   getUnifiedState: () => ipcRenderer.invoke(IPC_CHANNELS.GET_UNIFIED_STATE),
+  launchNetworkSettings: () => ipcRenderer.invoke('tornlinux:launchNetworkSettings'),
+  getNetworkStatus: () => ipcRenderer.invoke('tornlinux:getNetworkStatus'),
+  launchBluetoothSettings: () => ipcRenderer.invoke('tornlinux:launchBluetoothSettings'),
+  launchInstaller: () => ipcRenderer.invoke('tornlinux:launchInstaller'),
+  getSystemVolume: () => ipcRenderer.invoke('tornlinux:getSystemVolume'),
+  setSystemVolume: (value) => ipcRenderer.invoke('tornlinux:setSystemVolume', value),
 });
