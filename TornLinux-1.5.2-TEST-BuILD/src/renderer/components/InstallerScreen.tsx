@@ -122,7 +122,7 @@ export function InstallerScreen({
             <div className="tls-installerNote">Building install plan...</div>
           ) : plan?.ok && plan.operations.length ? (
             <ul className="tls-installerPlanList">
-              {plan.operations.map((operation, index) => (
+              {plan.operations.map((operation: InstallerPlan['operations'][number], index: number) => (
                 <li key={`${operation.kind}-${operation.target}-${index}`}>
                   <strong>{operation.kind}</strong>
                   <span>{operation.detail}</span>

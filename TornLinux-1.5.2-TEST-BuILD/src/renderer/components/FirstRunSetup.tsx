@@ -25,7 +25,7 @@ export function FirstRunSetup({
 
   useEffect(() => {
     if (!open) return;
-    window.tornlinux?.getConfig().then((value) => setConfig(value)).catch(() => undefined);
+    window.tornlinux?.getConfig().then((value: AppConfig) => setConfig(value)).catch(() => undefined);
   }, [open]);
 
   if (!open) return null;
@@ -77,7 +77,7 @@ export function FirstRunSetup({
             <input
               type="password"
               value={config.tornApiKey}
-              onChange={(e) => setConfig((current) => ({ ...current, tornApiKey: e.target.value }))}
+              onChange={(e) => setConfig((current: AppConfig) => ({ ...current, tornApiKey: e.target.value }))}
               placeholder="Enter Torn API key"
             />
             <span>{configStatus.hasTornApiKey ? 'Torn API key detected. You can replace it here.' : 'Add your Torn API key now or skip and configure later.'}</span>
@@ -88,7 +88,7 @@ export function FirstRunSetup({
             <input
               type="password"
               value={config.tornStatsApiKey}
-              onChange={(e) => setConfig((current) => ({ ...current, tornStatsApiKey: e.target.value }))}
+              onChange={(e) => setConfig((current: AppConfig) => ({ ...current, tornStatsApiKey: e.target.value }))}
               placeholder="Enter TornStats API key"
             />
             <span>{configStatus.hasTornStatsApiKey ? 'TornStats key detected. You can replace it here.' : 'Add a TornStats read-only key now or configure it later.'}</span>

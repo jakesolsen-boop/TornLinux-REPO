@@ -36,8 +36,8 @@ export function SettingsDrawer({
   useEffect(() => {
     if (!open) return;
     window.tornlinux?.getSystemVolume?.().then((v: number) => setVolume(v)).catch(() => undefined);
-    window.tornlinux?.getConfig?.().then((value) => setConfig(value || {})).catch(() => undefined);
-    window.tornlinux?.getDisplayState?.().then((value) => setDisplayState(value || null)).catch(() => undefined);
+    window.tornlinux?.getConfig?.().then((value: AppConfig) => setConfig(value || {})).catch(() => undefined);
+    window.tornlinux?.getDisplayState?.().then((value: DisplayState | null) => setDisplayState(value || null)).catch(() => undefined);
   }, [open]);
 
   const changeVolume = async (v: number) => {
@@ -102,7 +102,7 @@ export function SettingsDrawer({
           <input
             type="password"
             value={config.tornApiKey || ''}
-            onChange={(e) => setConfig((current) => ({ ...current, tornApiKey: e.target.value }))}
+            onChange={(e) => setConfig((current: AppConfig) => ({ ...current, tornApiKey: e.target.value }))}
             placeholder="Enter Torn API key"
           />
         </div>
@@ -112,7 +112,7 @@ export function SettingsDrawer({
           <input
             type="password"
             value={config.tornStatsApiKey || ''}
-            onChange={(e) => setConfig((current) => ({ ...current, tornStatsApiKey: e.target.value }))}
+            onChange={(e) => setConfig((current: AppConfig) => ({ ...current, tornStatsApiKey: e.target.value }))}
             placeholder="Enter TornStats API key"
           />
         </div>
@@ -121,7 +121,7 @@ export function SettingsDrawer({
           <label>Layout mode</label>
           <select
             value={form.layoutMode}
-            onChange={(e) => setForm((current) => ({ ...current, layoutMode: e.target.value as AppSettings['layoutMode'] }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, layoutMode: e.target.value as AppSettings['layoutMode'] }))}
           >
             <option value="torn">Torn only</option>
             <option value="split">Split view</option>
@@ -135,7 +135,7 @@ export function SettingsDrawer({
             min={5000}
             step={1000}
             value={form.refreshIntervalMs}
-            onChange={(e) => setForm((current) => ({ ...current, refreshIntervalMs: Number(e.target.value) }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, refreshIntervalMs: Number(e.target.value) }))}
           />
         </div>
 
@@ -146,7 +146,7 @@ export function SettingsDrawer({
             min={340}
             max={900}
             value={form.discordWidth}
-            onChange={(e) => setForm((current) => ({ ...current, discordWidth: Number(e.target.value) }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, discordWidth: Number(e.target.value) }))}
           />
         </div>
 
@@ -155,7 +155,7 @@ export function SettingsDrawer({
           <input
             type="text"
             value={form.tornUrl}
-            onChange={(e) => setForm((current) => ({ ...current, tornUrl: e.target.value }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, tornUrl: e.target.value }))}
           />
         </div>
 
@@ -164,7 +164,7 @@ export function SettingsDrawer({
           <input
             type="text"
             value={form.discordUrl}
-            onChange={(e) => setForm((current) => ({ ...current, discordUrl: e.target.value }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, discordUrl: e.target.value }))}
           />
         </div>
 
@@ -173,7 +173,7 @@ export function SettingsDrawer({
           <input
             type="text"
             value={form.timezone}
-            onChange={(e) => setForm((current) => ({ ...current, timezone: e.target.value }))}
+            onChange={(e) => setForm((current: AppSettings) => ({ ...current, timezone: e.target.value }))}
             placeholder="America/Chicago"
           />
         </div>
@@ -193,7 +193,7 @@ export function SettingsDrawer({
           <label>Display Resolution</label>
           {displayState?.modes?.length ? (
             <div className="tsd-actionGrid">
-              {displayState.modes.map((mode) => (
+              {displayState.modes.map((mode: string) => (
                 <button
                   key={mode}
                   type="button"

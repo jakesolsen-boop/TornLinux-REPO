@@ -11,7 +11,7 @@ import { FirstUseLanding } from './components/FirstUseLanding';
 import { EntryScreen } from './components/EntryScreen';
 import { InstallerScreen } from './components/InstallerScreen';
 import { BootSplash } from './components/BootSplash';
-import type { AppConfig, ConfigStatus } from '@shared/types';
+import type { AppConfig, AppSettings, ConfigStatus } from '@shared/types';
 import './styles/app.css';
 import './styles/settings-drawer.css';
 import './styles/first-run-setup.css';
@@ -28,8 +28,8 @@ const ENTRY_MODE_KEY = 'tornlinux.entry.lastMode';
 const FIRST_RUN_KEY = 'tornlinux.firstRunComplete';
 
 export function App() {
-  const [settings, setSettings] = useState({
-    layoutMode: 'split' as const,
+  const [settings, setSettings] = useState<AppSettings>({
+    layoutMode: 'split',
     discordWidth: 480,
     timezone: 'America/Chicago',
     tornUrl: 'https://www.torn.com/',
