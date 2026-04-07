@@ -13,6 +13,21 @@ python3 -c "import PIL" >/dev/null 2>&1 || {
   exit 1
 }
 
+MASTER_SPLASH="$PROJECT_ROOT/assets/master/splash.png"
+MASTER_WALLPAPER="$PROJECT_ROOT/assets/master/wallpaper.png"
+RUNTIME_DIR="$PROJECT_ROOT/live-build/config/includes.chroot/usr/share/tornlinux"
+PLYMOUTH_DIR="$PROJECT_ROOT/live-build/config/includes.chroot/usr/share/plymouth/themes/tornlinux"
+
+[[ -f "$MASTER_SPLASH" ]] || { echo "[stamp-assets] ERROR: missing $MASTER_SPLASH" >&2; exit 1; }
+[[ -f "$MASTER_WALLPAPER" ]] || { echo "[stamp-assets] ERROR: missing $MASTER_WALLPAPER" >&2; exit 1; }
+
+mkdir -p "$RUNTIME_DIR"
+mkdir -p "$PLYMOUTH_DIR"
+
+cp "$MASTER_SPLASH" "$RUNTIME_DIR/splash.png"
+cp "$MASTER_WALLPAPER" "$RUNTIME_DIR/wallpaper.png"
+cp "$MASTER_SPLASH" "$PLYMOUTH_DIR/background.png"
+
 python3 - <<PY
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
@@ -28,10 +43,8 @@ font_candidates = [
 ]
 font_path = next((f for f in font_candidates if Path(f).exists()), None)
 
-def stamp(img_path: Path):
-    if not img_path.exists():
-        raise SystemExit(f"Missing asset for stamping: {img_path}")
-    img = Image.open(img_path).convert("RGBA")
+def stamp(target: Path):
+    img = Image.open(target).convert("RGBA")
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, max(24, img.width // 42)) if font_path else ImageFont.load_default()
     bbox = draw.textbbox((0, 0), stamp_text, font=font)
@@ -42,7 +55,7 @@ def stamp(img_path: Path):
     draw.rounded_rectangle([x-14, y-8, x+tw+14, y+th+8], radius=10, fill=(0, 0, 0, 155))
     draw.text((x+1, y+1), stamp_text, font=font, fill=(0, 0, 0, 210))
     draw.text((x, y), stamp_text, font=font, fill=(255, 255, 255, 245))
-    img.save(img_path)
+    img.save(target)
 
 targets = [
     project_root / "live-build/config/includes.chroot/usr/share/tornlinux/splash.png",
@@ -52,5 +65,5 @@ targets = [
 for target in targets:
     stamp(target)
 
-print("[stamp-assets] Stamped staged assets successfully")
+print("[stamp-assets] Copied master assets and stamped staged assets successfully")
 PY
