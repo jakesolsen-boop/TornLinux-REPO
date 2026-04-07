@@ -12,8 +12,6 @@ if command -v feh >/dev/null 2>&1; then
   feh --bg-fill /usr/share/tornlinux/wallpaper.png >> "$LOG" 2>&1 || true
 fi
 
-sleep 1
-
 echo "[$(date)] Launching TornLinux Electron app" >> "$LOG" 2>/dev/null || true
 /usr/local/bin/tornlinux-electron-launch >> "$LOG" 2>&1
 

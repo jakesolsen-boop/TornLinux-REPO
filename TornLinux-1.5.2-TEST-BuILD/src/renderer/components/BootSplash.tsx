@@ -1,4 +1,5 @@
 import React from 'react';
+import logoSrc from '../assets/brand/tornlinux_logo_circle.png';
 
 export function BootSplash({ version }: { version: string }) {
   return (
@@ -10,15 +11,14 @@ export function BootSplash({ version }: { version: string }) {
 
       <div className="tls-splashCore">
         <div className="tls-splashSeal">
-          <div className="tls-splashSeal__ring" />
-          <div className="tls-splashSeal__ring tls-splashSeal__ring--inner" />
-          <div className="tls-splashSeal__mark">TL</div>
+          <div className="tls-splashSeal__halo" />
+          <img className="tls-splashSeal__img" src={logoSrc} alt="" width={164} height={164} />
         </div>
 
         <div className="tls-splashText">
-          <div className="tls-splashEyebrow">Boot sequence engaged</div>
+          <div className="tls-splashEyebrow">Initializing command center</div>
           <h1 className="tls-splashTitle">TornLinux</h1>
-          <p className="tls-splashSubtitle">Initializing game appliance surface and secure web shell.</p>
+          <p className="tls-splashSubtitle">Purpose-built game appliance booting into the Torn surface.</p>
         </div>
 
         <div className="tls-splashPulse">

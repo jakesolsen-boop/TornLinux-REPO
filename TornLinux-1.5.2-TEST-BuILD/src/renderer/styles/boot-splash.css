@@ -5,8 +5,8 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at top, rgba(48, 110, 196, 0.28), transparent 36%),
-    linear-gradient(180deg, #08111d 0%, #03070d 100%);
+    radial-gradient(circle at 50% 24%, rgba(36, 157, 255, 0.2), transparent 28%),
+    linear-gradient(180deg, #0a0e13 0%, #121821 55%, #07090c 100%);
   color: #eff7ff;
 }
 
@@ -20,8 +20,8 @@
 
 .tls-splashBackdrop {
   background:
-    radial-gradient(circle at center, rgba(91, 189, 255, 0.08), transparent 45%),
-    linear-gradient(90deg, transparent 0%, rgba(91, 189, 255, 0.04) 48%, transparent 100%);
+    radial-gradient(circle at center, rgba(91, 189, 255, 0.06), transparent 42%),
+    linear-gradient(90deg, transparent 0%, rgba(91, 189, 255, 0.03) 48%, transparent 100%);
   animation: tls-splash-pan 6s linear infinite;
 }
 
@@ -57,48 +57,36 @@
   position: relative;
   z-index: 1;
   width: min(780px, calc(100vw - 48px));
-  padding: 48px 42px;
-  border: 1px solid rgba(119, 205, 255, 0.2);
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(7, 16, 27, 0.9), rgba(5, 10, 18, 0.84));
-  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.42);
+  padding: 24px 42px 48px;
   display: grid;
   justify-items: center;
-  gap: 28px;
+  gap: 22px;
 }
 
 .tls-splashSeal {
   position: relative;
-  width: 128px;
-  height: 128px;
+  width: 184px;
+  height: 184px;
   display: grid;
   place-items: center;
 }
 
-.tls-splashSeal__ring {
+.tls-splashSeal__halo {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  border: 1px solid rgba(139, 220, 255, 0.32);
-  box-shadow: inset 0 0 32px rgba(54, 157, 255, 0.16);
+  background: radial-gradient(circle, rgba(36, 157, 255, 0.16) 0%, rgba(36, 157, 255, 0.05) 45%, transparent 72%);
+  filter: blur(8px);
   animation: tls-splash-orbit 4.4s linear infinite;
 }
 
-.tls-splashSeal__ring--inner {
-  inset: 14px;
-  animation-duration: 3.2s;
-  animation-direction: reverse;
-}
-
-.tls-splashSeal__mark {
+.tls-splashSeal__img {
   position: relative;
   z-index: 1;
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-indent: 0.2em;
-  color: #f4fbff;
-  text-shadow: 0 0 24px rgba(123, 231, 255, 0.22);
+  width: 164px;
+  height: 164px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(36, 157, 255, 0.2));
 }
 
 .tls-splashText {
@@ -124,7 +112,7 @@
   font-size: clamp(52px, 8vw, 96px);
   line-height: 0.94;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .tls-splashSubtitle {
@@ -196,16 +184,17 @@
 @media (max-width: 720px) {
   .tls-splashCore {
     width: min(100vw - 24px, 680px);
-    padding: 36px 24px;
+    padding: 18px 24px 36px;
   }
 
   .tls-splashSeal {
-    width: 108px;
-    height: 108px;
+    width: 144px;
+    height: 144px;
   }
 
-  .tls-splashSeal__mark {
-    font-size: 34px;
+  .tls-splashSeal__img {
+    width: 128px;
+    height: 128px;
   }
 
   .tls-splashPulse span {

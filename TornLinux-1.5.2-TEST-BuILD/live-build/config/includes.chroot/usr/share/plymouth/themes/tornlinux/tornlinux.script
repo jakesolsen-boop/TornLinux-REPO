@@ -9,19 +9,19 @@ logo_sprite = Sprite(logo);
 logo_w = logo.GetWidth();
 logo_h = logo.GetHeight();
 logo_x = (screen_width - logo_w) / 2;
-logo_y = (screen_height - logo_h) / 2 - 40;
+logo_y = (screen_height - logo_h) / 2 - 90;
 logo_sprite.SetX(logo_x);
 logo_sprite.SetY(logo_y);
 logo_sprite.SetZ(1000);
 
 title = TextSprite("TORNLINUX");
 title.SetX((screen_width - title.GetWidth()) / 2);
-title.SetY(logo_y + logo_h + 14);
+title.SetY(logo_y + logo_h + 24);
 title.SetZ(1001);
 
 status = TextSprite("Initializing command center");
 status.SetX((screen_width - status.GetWidth()) / 2);
-status.SetY(logo_y + logo_h + 48);
+status.SetY(logo_y + logo_h + 56);
 status.SetZ(1002);
 
 pulse_a = Sprite();

@@ -14,35 +14,6 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 CURRENT_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
 
-resolve_asset_source() {
-  local kind="$1"
-  local candidates=()
-  if [[ "$kind" == "splash" ]]; then
-    candidates=(
-      "$PROJECT_ROOT/assets/master/splash.png"
-      "$PROJECT_ROOT/assets/splash/splash_${CURRENT_VERSION}.png"
-      "$PROJECT_ROOT/assets/splash/splash_1.3.11.png"
-      "$PROJECT_ROOT/assets/splash/splash_1.3.5.png"
-    )
-  else
-    candidates=(
-      "$PROJECT_ROOT/assets/master/wallpaper.png"
-      "$PROJECT_ROOT/assets/wallpaper/wallpaper_${CURRENT_VERSION}.png"
-      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.11.png"
-      "$PROJECT_ROOT/assets/wallpaper/wallpaper_1.3.5.png"
-    )
-  fi
-
-  local candidate
-  for candidate in "${candidates[@]}"; do
-    if [[ -f "$candidate" ]]; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  done
-  return 1
-}
-
 echo "[preflight] Project root: $PROJECT_ROOT"
 PREFLIGHT_SUMMARY="$PROJECT_ROOT/PREFLIGHT_SUMMARY_${CURRENT_VERSION}.txt"
 : > "$PREFLIGHT_SUMMARY"
@@ -91,10 +62,9 @@ done
 [[ -x "$PROJECT_ROOT/scripts/build-iso.sh" ]] || fail "scripts/build-iso.sh is not executable"
 [[ -x "$PROJECT_ROOT/scripts/write-usb.sh" ]] || fail "scripts/write-usb.sh is not executable"
 
-SPLASH_SOURCE="$(resolve_asset_source splash)" || fail "No splash asset source found"
-WALLPAPER_SOURCE="$(resolve_asset_source wallpaper)" || fail "No wallpaper asset source found"
-summary "Using splash source: $SPLASH_SOURCE"
-summary "Using wallpaper source: $WALLPAPER_SOURCE"
+BRAND_SOURCE="$PROJECT_ROOT/assets/brand/tornlinux_logo_circle.png"
+[[ -f "$BRAND_SOURCE" ]] || fail "Brand logo missing for generated build assets: assets/brand/tornlinux_logo_circle.png"
+summary "Using generated build assets from brand source: $BRAND_SOURCE"
 
 grep -qs 'cp -a "\$APP_DIR"/\. "\$TARGET_DIR"/' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not using deterministic staged app copy"
 grep -qs 'chmod -R 755 "\$TARGET_DIR"' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not applying staged app execute permissions"

@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "build:renderer": "vite build",
     "preview:renderer": "vite preview",
-    "package:linux": "npm run build:renderer && npx electron-packager . TornLinux --platform=linux --arch=x64 --overwrite --prune=true --ignore='^(?:/src/shared|/specs|/config|/scripts|/live-build|/side-work|/test-shell.html|/tsconfig.json|/vite.config.ts|/VERSION|/.*\\.(?:md|txt))$'",
+    "package:linux": "npm run build:renderer && npx electron-packager . TornLinux --platform=linux --arch=x64 --overwrite --prune=true --ignore='^(?:/assets|/src/shared|/specs|/config|/scripts|/live-build|/side-work|/test-shell.html|/tsconfig.json|/vite.config.ts|/VERSION|/.*\\.(?:md|txt))$'",
     "prepare:live-build": "bash scripts/prepare-live-build.sh",
     "live-build:config": "bash scripts/configure-live-build.sh",
     "live-build:build": "bash scripts/build-iso.sh",
