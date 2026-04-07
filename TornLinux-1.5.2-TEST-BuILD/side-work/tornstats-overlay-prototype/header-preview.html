@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TornLinux Header Preview</title>
+    <link rel="stylesheet" href="./proposed/TornLinux-1.5.2-TEST-BuILD/src/renderer/styles/torn-header.tokens.css" />
+    <link rel="stylesheet" href="./proposed/TornLinux-1.5.2-TEST-BuILD/src/renderer/styles/torn-header.css" />
+    <link rel="stylesheet" href="./proposed/TornLinux-1.5.2-TEST-BuILD/src/renderer/styles/app.css" />
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+      }
+      .preview-shell { min-height: 100vh; }
+      .preview-note {
+        padding: 16px 18px 0;
+        color: rgba(193,210,234,0.74);
+        font-size: 13px;
+      }
+      .preview-fill {
+        height: calc(100vh - 214px);
+        border-top: 1px solid rgba(158,186,226,0.08);
+      }
+      .icon-16, .icon-18, .icon-20 {
+        display: inline-block;
+        color: currentColor;
+        flex: 0 0 auto;
+      }
+      .icon-16 { width: 16px; height: 16px; }
+      .icon-18 { width: 18px; height: 18px; }
+      .icon-20 { width: 20px; height: 20px; }
+      .tlHeader { position: relative; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-shell">
+      <div class="preview-note">Static preview using recreated side-prototype CSS and the real logo asset.</div>
+      <header class="tlHeader" role="banner">
+        <div class="tlLeft">
+          <div class="tlBrandMark" aria-label="TornLinux brand">
+            <img class="tlBrandMarkImg" src="../../assets/brand/tornlinux_logo_circle.png" alt="" width="88" height="88" />
+          </div>
+          <div class="tlBrandText">
+            <div class="tlBrandTitle">Torn<em>Linux</em></div>
+            <div class="tlBrandMeta">Command Center</div>
+          </div>
+        </div>
+
+        <div class="tlCenter">
+          <div class="tlCenterPlate" aria-label="Player and status">
+            <div class="tlChipRow">
+              <div class="tlChip" aria-label="Player name">
+                <svg class="tlChipSvgIcon icon-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8.2" r="3.2" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M5.5 18.2c1.5-2.8 3.7-4.2 6.5-4.2s5 1.4 6.5 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="tlChipText">Jake Olsen</span>
+              </div>
+              <div class="tlChip" aria-label="Level">
+                <svg class="tlChipSvgIcon icon-16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="currentColor" d="M12 3.5 18.5 8v8L12 20.5 5.5 16V8L12 3.5Zm0 2.1L7.3 8.4v7.1l4.7 3.4 4.7-3.4V8.4L12 5.6Z"/>
+                  <path fill="currentColor" d="M9.2 12.5 12 9.8l2.8 2.7v2.1L12 17l-2.8-2.4v-2.1Z"/>
+                </svg>
+                <span class="tlChipText">Level 100</span>
+              </div>
+              <div class="tlChip" aria-label="Money">
+                <svg class="tlChipSvgIcon tlChipSvgIcon--money icon-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 9.2L12 4.8L20 9.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5.4 10.6H18.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M7.3 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M12 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M16.7 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M4.8 19.2H19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="tlChipText">$742,000,000</span>
+              </div>
+              <div class="tlChip tlChip--combat" aria-label="Combat snapshot">
+                <svg class="tlChipSvgIcon tlChipSvgIcon--combat icon-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 18.5V11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M12 18.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M19 18.5V4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M3.5 19.5H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="tlChipText">Combat 3.2B</span>
+                <span class="tlChipMeta">FF 2.9</span>
+              </div>
+              <div class="tlChip tlChip--status tlChip--status-online" aria-label="Status Okay">
+                <svg class="tlChipSvgIcon tlChipSvgIcon--status icon-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M9.2 12.4l1.8 1.8l3.8-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="tlChipText">Okay</span>
+              </div>
+            </div>
+
+            <div class="tlStatsRow" aria-label="Player values">
+              <div class="tlStat tlStat--energy" aria-label="Energy">
+                <svg class="tlStatIcon icon-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.4 3.5L8.1 12h4.2l-1.1 8.5l5.7-9h-4.3l.8-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+                </svg>
+                <span class="tlStatLabel">Energy</span>
+                <span class="tlStatValue">150 / 150</span>
+              </div>
+
+              <div class="tlStat tlStat--happiness" aria-label="Happiness">
+                <svg class="tlStatIcon icon-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="7.4" stroke="currentColor" stroke-width="1.7"/>
+                  <circle cx="9.4" cy="10.2" r="1" fill="currentColor"/>
+                  <circle cx="14.6" cy="10.2" r="1" fill="currentColor"/>
+                  <path d="M8.6 14.1C9.5 15.3 10.7 16 12 16c1.3 0 2.5-.7 3.4-1.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+                <span class="tlStatLabel">Happy</span>
+                <span class="tlStatValue">5,000 / 5,000</span>
+              </div>
+
+              <div class="tlStat tlStat--nerve" aria-label="Nerve">
+                <svg class="tlStatIcon icon-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.4 11.8a3.9 3.9 0 1 1 5.2 3.7v2.1h1.7v1.6h1.6v1.6h1.8v-2l1.8-1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="9.8" cy="10.2" r="1.2" fill="currentColor"/>
+                  <path d="M16.8 8.6l2.8 2.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                  <path d="M18.2 7.2l2.1 2.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                <span class="tlStatLabel">Nerve</span>
+                <span class="tlStatValue">50 / 50</span>
+              </div>
+
+              <div class="tlStat tlStat--life" aria-label="Life">
+                <svg class="tlStatIcon icon-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 20.3c-3.2-2.2-5.9-4.7-7.4-7.1c-1.9-3-.4-6.6 2.9-7c1.8-.2 3.5.7 4.5 2.1c1-1.4 2.7-2.3 4.5-2.1c3.3.4 4.8 4 2.9 7c-1.5 2.4-4.2 4.9-7.4 7.1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                  <path d="M9 12h2l1-2.2l1.1 4.2l1-2h1.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="tlStatLabel">Life</span>
+                <span class="tlStatValue">4,200 / 4,200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tlRight">
+          <div class="tlTctReadout" aria-label="Torn City Time">
+            <svg class="tlTctReadoutIcon icon-16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M10 6.5V10L12.8 11.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <span class="tlTctReadoutValue">18:42:10</span>
+          </div>
+          <div class="tlActionRow">
+            <button class="tlAction tlAction--tornstats" type="button" aria-label="Open TornStats">
+              <svg class="tlActionIconSvg icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 18.5V11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M12 18.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M19 18.5V4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M3.5 19.5H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <span class="tlActionLabel">TornStats</span>
+            </button>
+            <button class="tlAction tlAction--network isOnline" type="button" aria-label="Network status online">
+              <svg class="tlActionIconSvg icon-18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="14.2" r="1.4" fill="currentColor"/>
+                <path d="M6.9 11.6C8.7 9.9 11.3 9.9 13.1 11.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M4.7 9.2C7.7 6.5 12.3 6.5 15.3 9.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M2.6 6.7C6.8 3.1 13.2 3.1 17.4 6.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              <span class="tlActionLabel">Online</span>
+            </button>
+            <button class="tlAction tlAction--settings" type="button" aria-label="Open settings">
+              <svg class="tlActionIconSvg icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6a3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M19.2 12a7.7 7.7 0 0 0-.08-1.08l1.78-1.39l-1.7-2.95l-2.16.73a7.9 7.9 0 0 0-1.86-1.08l-.38-2.23h-3.4l-.38 2.23a7.9 7.9 0 0 0-1.86 1.08L4.8 6.58L3.1 9.53l1.78 1.39A7.7 7.7 0 0 0 4.8 12c0 .37.03.73.08 1.08L3.1 14.47l1.7 2.95l2.16-.73c.57.45 1.2.81 1.86 1.08l.38 2.23h3.4l.38-2.23c.66-.27 1.29-.63 1.86-1.08l2.16.73l1.7-2.95l-1.78-1.39c.05-.35.08-.71.08-1.08Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+              <span class="tlActionLabel">Settings</span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <div class="preview-fill"></div>
+    </div>
+  </body>
+  </html>

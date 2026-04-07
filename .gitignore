@@ -9,6 +9,8 @@
 # OS/editor junk
 .DS_Store
 Thumbs.db
+.codex
+.codex/
 
 # Node
 node_modules/

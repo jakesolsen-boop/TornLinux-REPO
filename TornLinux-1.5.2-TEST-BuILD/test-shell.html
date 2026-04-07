@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TornLinux App Prototype</title>
+    <style>
+      :root {
+        --bg-0: #07111f;
+        --bg-1: #0f1d33;
+        --panel: rgba(12, 22, 40, 0.88);
+        --panel-2: rgba(18, 31, 54, 0.92);
+        --right-rail: 118px;
+        --border: rgba(150, 180, 221, 0.16);
+        --text: #edf4ff;
+        --muted: #93a9c8;
+        --blue: #67bbff;
+        --green: #72d977;
+        --yellow: #f2c94c;
+        --red: #ff6b7f;
+        --shadow: 0 20px 50px rgba(0, 0, 0, 0.34);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at 10% 0%, rgba(103,187,255,0.14), transparent 24%),
+          radial-gradient(circle at 82% 0%, rgba(114,217,119,0.08), transparent 20%),
+          linear-gradient(180deg, var(--bg-1), var(--bg-0));
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+
+      body, #app {
+        min-height: 100vh;
+      }
+
+      .proto {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+      }
+
+      .header {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr) var(--right-rail);
+        gap: 14px;
+        padding: 10px 24px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(5, 13, 26, 0.74);
+        backdrop-filter: blur(10px);
+        min-height: 100px;
+        align-items: stretch;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .brand img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        flex: 0 0 auto;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 30px;
+        letter-spacing: -0.03em;
+        line-height: 0.95;
+      }
+
+      .brand h1 span { color: var(--blue); }
+
+      .brand p {
+        margin: 8px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .header-center {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background:
+          radial-gradient(circle at top left, rgba(103,187,255,0.12), transparent 28%),
+          linear-gradient(180deg, rgba(17, 29, 52, 0.92), rgba(10, 19, 35, 0.96));
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .chip {
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(22, 38, 67, 0.78);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .chip-icon {
+        width: 14px;
+        height: 14px;
+        display: inline-flex;
+        color: var(--muted);
+        flex: 0 0 auto;
+      }
+
+      .chip strong { color: var(--text); }
+      .chip--combat strong { color: var(--blue); }
+      .chip--money strong { color: var(--yellow); }
+      .chip--status strong { color: var(--green); }
+      .chip--tct strong { color: var(--blue); }
+      .chip--money .chip-icon { color: var(--yellow); }
+      .chip--combat .chip-icon { color: var(--blue); }
+      .chip--status .chip-icon { color: var(--green); }
+
+      .meters {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .meter {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(16, 28, 49, 0.9);
+      }
+
+      .meter-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .meter-top span {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .meter-top strong {
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+
+      .meter--energy strong { color: var(--green); }
+      .meter--happy strong { color: var(--yellow); }
+      .meter--nerve strong { color: var(--blue); }
+      .meter--life strong { color: var(--red); }
+
+      .actions {
+        display: grid;
+        grid-template-rows: 30px 24px 30px;
+        align-content: center;
+        gap: 6px;
+        width: var(--right-rail);
+        min-height: 84px;
+      }
+
+      .button {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(18, 30, 52, 0.88);
+        color: var(--text);
+        padding: 0 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 11px;
+      }
+
+      .chip--tct {
+        width: 100%;
+        min-height: 0;
+        height: 100%;
+        justify-content: space-between;
+        padding: 5px 10px;
+        border-radius: 12px;
+        background:
+          radial-gradient(circle at 14% 50%, rgba(103,187,255,0.16), transparent 54%),
+          linear-gradient(180deg, rgba(18, 34, 62, 0.94), rgba(8, 18, 36, 0.92));
+      }
+
+      .chip--tct strong {
+        font-size: 15px;
+        line-height: 1;
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .button svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+        flex: 0 0 auto;
+      }
+
+      .button--icon {
+        padding: 0;
+        gap: 0;
+      }
+
+      .button--icon span {
+        display: none;
+      }
+
+      .button--primary {
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .button--primary svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(340px, 460px);
+        gap: 14px;
+        padding: 14px;
+        min-height: 0;
+        align-items: stretch;
+      }
+
+      .pane {
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: var(--panel-2);
+        box-shadow: var(--shadow);
+      }
+
+      .pane-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(8, 17, 31, 0.78);
+      }
+
+      .pane-head strong {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .pane-head span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #fff;
+      }
+
+      .control-dock {
+        margin: 0 14px 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(150, 180, 221, 0.16);
+        background: rgba(12, 22, 40, 0.72);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .footer-note {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 14px 14px;
+      }
+
+      .stats-grid, .control-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .card span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .card strong {
+        display: block;
+        font-size: 22px;
+        margin-bottom: 6px;
+      }
+
+      .card small {
+        display: block;
+        color: var(--muted);
+      }
+
+      .card--combat strong { color: var(--blue); }
+      .card--wealth strong { color: var(--yellow); }
+      .card--good strong { color: var(--green); }
+      .card--danger strong { color: var(--red); }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .field input, .field select {
+        min-height: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(13, 25, 45, 0.9);
+        color: var(--text);
+        padding: 0 12px;
+        font: inherit;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .overlay-backdrop {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(3, 8, 16, 0.58);
+        backdrop-filter: blur(10px);
+        z-index: 100;
+      }
+
+      .overlay {
+        width: min(1100px, 100%);
+        max-height: calc(100vh - 48px);
+        overflow: auto;
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        background:
+          radial-gradient(circle at 10% 0%, rgba(103,187,255,0.12), transparent 24%),
+          linear-gradient(180deg, rgba(17, 29, 52, 0.96), rgba(8, 18, 34, 0.98));
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      .overlay-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .overlay-head strong {
+        display: block;
+        font-size: 20px;
+      }
+
+      .overlay-head span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .overlay-body {
+        padding: 18px 20px 20px;
+      }
+
+      .overlay-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      @media (max-width: 1280px) {
+        .proto { grid-template-rows: auto 1fr; }
+        .header { grid-template-columns: 1fr; }
+        .meters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .actions { width: 100%; align-items: stretch; min-height: 0; }
+        .shell { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 760px) {
+        .meters, .stats-grid, .control-grid, .footer-note { grid-template-columns: 1fr; }
+        .overlay-head { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const TORN_API_KEY = "t12kBJHUoufNNdqD";
+      const TORNSTATS_API_KEY = "TS_qc78C8jaoFHfSprD";
+
+      const initialState = {
+        tct: "--:--:--",
+        tornUrl: "https://www.torn.com/index.php",
+        discordUrl: "https://discord.com/app",
+        tornPreset: "index",
+        tornStatsOpen: false,
+        settingsOpen: false,
+        networkOpen: false,
+        networkOnline: true,
+        embedState: "Unverified",
+        stats: {
+          battleStats: "Loading",
+          netWorth: "Loading",
+          fairFight: "Loading",
+          freshness: "Loading",
+          attacksWon: "Loading",
+          defendsWon: "Loading",
+          xanaxTaken: "Loading",
+          refills: "Loading"
+        },
+        player: {
+          name: "Local Test",
+          level: 100,
+          money: "$742,000,000",
+          status: "Okay",
+          combat: "3.2B",
+          combatMeta: "FF 2.9",
+          energy: { current: 150, max: 150 },
+          happiness: { current: 5000, max: 5000 },
+          nerve: { current: 50, max: 50 },
+          life: { current: 4200, max: 4200 }
+        }
+      };
+
+      let state = initialState;
+
+      const setState = (patch) => {
+        state = { ...state, ...patch };
+        render();
+      };
+
+      const formatClock = (date) => new Intl.DateTimeFormat("en-GB", {
+        timeZone: "UTC",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(date);
+
+      const statCards = (stats) => [
+        ["Battle Stats", stats.battleStats, "Total spy estimate", "card--combat"],
+        ["Net Worth", stats.netWorth, "Economic profile", "card--wealth"],
+        ["Fair Fight", stats.fairFight, "Combat efficiency context", ""],
+        ["Freshness", stats.freshness, "Spy or record age", ""],
+        ["Attacks Won", stats.attacksWon, "PvP activity signal", "card--good"],
+        ["Defends Won", stats.defendsWon, "Defensive performance", ""],
+        ["Xanax Taken", stats.xanaxTaken, "Core growth resource", ""],
+        ["Refills", stats.refills, "Energy investment", ""]
+      ];
+
+      const iconSvg = {
+        player: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8.2" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 18.2c1.5-2.8 3.7-4.2 6.5-4.2s5 1.4 6.5 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+        level: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 3.5 18.5 8v8L12 20.5 5.5 16V8L12 3.5Zm0 2.1L7.3 8.4v7.1l4.7 3.4 4.7-3.4V8.4L12 5.6Z"/><path fill="currentColor" d="M9.2 12.5 12 9.8l2.8 2.7v2.1L12 17l-2.8-2.4v-2.1Z"/></svg>`,
+        bank: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 9.2L12 4.8L20 9.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.4 10.6H18.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.3 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.7 10.6V17.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.8 19.2H19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+        status: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M9.2 12.4l1.8 1.8l3.8-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        network: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="14.2" r="1.4" fill="currentColor"/><path d="M6.9 11.6C8.7 9.9 11.3 9.9 13.1 11.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.7 9.2C7.7 6.5 12.3 6.5 15.3 9.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M2.6 6.7C6.8 3.1 13.2 3.1 17.4 6.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+        settings: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6a3.8 3.8 0 0 0 0-7.6Z" stroke="currentColor" stroke-width="1.8"/><path d="M19.2 12a7.7 7.7 0 0 0-.08-1.08l1.78-1.39l-1.7-2.95l-2.16.73a7.9 7.9 0 0 0-1.86-1.08l-.38-2.23h-3.4l-.38 2.23a7.9 7.9 0 0 0-1.86 1.08L4.8 6.58L3.1 9.53l1.78 1.39A7.7 7.7 0 0 0 4.8 12c0 .37.03.73.08 1.08L3.1 14.47l1.7 2.95l2.16-.73c.57.45 1.2.81 1.86 1.08l.38 2.23h3.4l.38-2.23c.66-.27 1.29-.63 1.86-1.08l2.16.73l1.7-2.95l-1.78-1.39c.05-.35.08-.71.08-1.08Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+        tornstats: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 18.5V11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 18.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 18.5V4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3.5 19.5H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+        reload: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 10a6 6 0 1 1-1.76-4.24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12.7 3.8H16v3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      };
+
+      const renderHeader = (player, tct, embedState) => `
+        <header class="header">
+          <div class="brand">
+            <img src="./assets/brand/tornlinux_logo_circle.png" alt="" />
+            <div>
+              <h1>Torn<span>Linux</span></h1>
+              <p>Local App Prototype</p>
+            </div>
+          </div>
+
+          <div class="header-center">
+            <div class="chip-row">
+              <div class="chip"><span class="chip-icon">${iconSvg.player}</span><span>${player.name}</span></div>
+              <div class="chip"><span class="chip-icon">${iconSvg.level}</span><span>Level</span><strong>${player.level}</strong></div>
+              <div class="chip chip--money"><span class="chip-icon">${iconSvg.bank}</span><span>Money</span><strong>${player.money}</strong></div>
+              <div class="chip chip--combat"><span class="chip-icon">${iconSvg.tornstats}</span><span>Combat</span><strong>${player.combat}</strong><span>${player.combatMeta}</span></div>
+              <div class="chip chip--status"><span class="chip-icon">${iconSvg.status}</span><span>Status</span><strong>${player.status}</strong></div>
+            </div>
+
+            <div class="meters">
+              ${renderMeter("Energy", player.energy, "meter--energy")}
+              ${renderMeter("Happy", player.happiness, "meter--happy")}
+              ${renderMeter("Nerve", player.nerve, "meter--nerve")}
+              ${renderMeter("Life", player.life, "meter--life")}
+            </div>
+          </div>
+
+          <div class="actions">
+            <div class="chip chip--tct"><span>TCT</span><strong>${tct}</strong></div>
+            <div class="action-grid">
+              <button class="button button--icon" data-action="toggle-network" aria-label="Network">${iconSvg.network}<span>Network</span></button>
+              <button class="button button--icon" data-action="toggle-settings" aria-label="Settings">${iconSvg.settings}<span>Settings</span></button>
+              <button class="button button--icon" data-action="reload" aria-label="Reload">${iconSvg.reload}<span>Reload</span></button>
+            </div>
+            <button class="button button--primary" data-action="toggle-stats">${iconSvg.tornstats}<span>TornStats</span></button>
+          </div>
+        </header>
+      `;
+
+      const renderMeter = (label, meter, klass) => `
+        <div class="meter ${klass}">
+          <div class="meter-top">
+            <span>${label}</span>
+            <strong>${meter.current}/${meter.max}</strong>
+          </div>
+        </div>
+      `;
+
+      const renderTornPane = (url) => `
+        <section class="pane">
+          <div class="pane-head">
+            <strong>Torn</strong>
+            <span class="mono">${url}</span>
+          </div>
+          <iframe id="torn-frame" src="${url}" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </section>
+      `;
+
+      const renderDiscordPane = (url) => `
+        <section class="pane">
+          <div class="pane-head">
+            <strong>Discord</strong>
+            <span>Reference Surface</span>
+          </div>
+          <iframe src="${url}" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </section>
+      `;
+
+      const renderFooterNote = (embedState, networkOnline, player) => `
+        <section class="footer-note">
+          <div class="card">
+            <span>Preview Status</span>
+            <strong>${embedState}</strong>
+            <small>Standalone web preview of the Electron app shell.</small>
+          </div>
+          <div class="card ${networkOnline ? "card--good" : "card--danger"}">
+            <span>Network</span>
+            <strong>${networkOnline ? "Online" : "Offline"}</strong>
+            <small>The real app opens system network settings. This preview shows a matching popup.</small>
+          </div>
+          <div class="card card--combat">
+            <span>Combat Snapshot</span>
+            <strong>${player.combat}</strong>
+            <small>${player.combatMeta}</small>
+          </div>
+        </section>
+      `;
+
+      const renderStatsOverlay = (open, stats) => open ? `
+        <div class="overlay-backdrop" data-action="close-stats">
+          <section class="overlay" aria-label="TornStats popup" onclick="event.stopPropagation()">
+            <div class="overlay-head">
+              <div>
+                <strong>TornStats</strong>
+                <span>At-a-glance player intelligence</span>
+              </div>
+              <button class="button" data-action="close-stats">Close</button>
+            </div>
+            <div class="overlay-body">
+              <div class="stats-grid">
+          ${statCards(stats).map(([label, value, note, klass]) => `
+            <div class="card ${klass}">
+              <span>${label}</span>
+              <strong>${value}</strong>
+              <small>${note}</small>
+            </div>
+          `).join("")}
+              </div>
+            </div>
+          </section>
+        </div>
+      ` : "";
+
+      const renderNetworkOverlay = (open, isOnline) => open ? `
+        <div class="overlay-backdrop" data-action="close-network">
+          <section class="overlay" aria-label="Network popup" onclick="event.stopPropagation()">
+            <div class="overlay-head">
+              <div>
+                <strong>Network</strong>
+                <span>${isOnline ? "Connection available" : "Connection unavailable"}</span>
+              </div>
+              <button class="button" data-action="close-network">Close</button>
+            </div>
+            <div class="overlay-body">
+              <div class="overlay-grid">
+                <div class="card ${isOnline ? "card--good" : ""}">
+                  <span>Connectivity</span>
+                  <strong>${isOnline ? "Online" : "Offline"}</strong>
+                  <small>Prototype stand-in for the system network dialog</small>
+                </div>
+                <div class="card">
+                  <span>App Behavior</span>
+                  <strong>External Settings</strong>
+                  <small>In the real app, this action launches system network settings rather than rendering a web form.</small>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ` : "";
+
+      const renderSettingsOverlay = (open, currentState) => open ? `
+        <div class="overlay-backdrop" data-action="close-settings">
+          <section class="overlay" aria-label="Settings popup" onclick="event.stopPropagation()">
+            <div class="overlay-head">
+              <div>
+                <strong>Settings</strong>
+                <span>${currentState.networkOnline ? "Network online" : "Network offline"}</span>
+              </div>
+              <button class="button" data-action="close-settings">Close</button>
+            </div>
+            <div class="overlay-body">
+              <div class="control-grid">
+                <div class="field">
+                  <label for="torn-url">Torn URL</label>
+                  <input id="torn-url" value="${currentState.tornUrl}" />
+                </div>
+                <div class="field">
+                  <label for="torn-preset">Torn Preset</label>
+                  <select id="torn-preset">
+                    <option value="index" ${currentState.tornPreset === "index" ? "selected" : ""}>Default Index</option>
+                    <option value="main" ${currentState.tornPreset === "main" ? "selected" : ""}>Main.php Attempt</option>
+                    <option value="home" ${currentState.tornPreset === "home" ? "selected" : ""}>Homepage</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="discord-url">Discord URL</label>
+                  <input id="discord-url" value="${currentState.discordUrl}" />
+                </div>
+                <div class="field">
+                  <label>Torn API Key</label>
+                  <input value="${TORN_API_KEY}" readonly />
+                </div>
+                <div class="field">
+                  <label>TornStats API Key</label>
+                  <input value="${TORNSTATS_API_KEY}" readonly />
+                </div>
+                <div class="field">
+                  <label>Network State</label>
+                  <input value="${currentState.networkOnline ? "Online" : "Offline"}" readonly />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ` : "";
+
+      const view = (currentState) => `
+        <main class="proto">
+          ${renderHeader(currentState.player, currentState.tct, currentState.embedState)}
+          <section class="shell">
+            ${renderTornPane(currentState.tornUrl)}
+            ${renderDiscordPane(currentState.discordUrl)}
+          </section>
+          ${renderFooterNote(currentState.embedState, currentState.networkOnline, currentState.player)}
+          ${renderStatsOverlay(currentState.tornStatsOpen, currentState.stats)}
+          ${renderNetworkOverlay(currentState.networkOpen, currentState.networkOnline)}
+          ${renderSettingsOverlay(currentState.settingsOpen, currentState)}
+        </main>
+      `;
+
+      /*
+      const renderStatsPane = (stats) => `
+        <div class="stats-grid">
+          ${statCards(stats).map(([label, value, note, klass]) => `
+            <div class="card ${klass}">
+              <span>${label}</span>
+              <strong>${value}</strong>
+              <small>${note}</small>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      */
+
+      const app = document.getElementById("app");
+
+      function render() {
+        app.innerHTML = view(state);
+        bindEvents();
+      }
+
+      function resolvePreset(preset) {
+        if (preset === "main") return "https://www.torn.com/main.php";
+        if (preset === "home") return "https://www.torn.com/";
+        return "https://www.torn.com/index.php";
+      }
+
+      function bindEvents() {
+        const reload = document.querySelector('[data-action="reload"]');
+        if (reload) reload.addEventListener("click", reloadSurfaces);
+
+        document.querySelectorAll('[data-action="toggle-stats"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ tornStatsOpen: true }));
+        });
+
+        document.querySelectorAll('[data-action="toggle-network"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ networkOpen: true }));
+        });
+
+        document.querySelectorAll('[data-action="toggle-settings"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ settingsOpen: true }));
+        });
+
+        document.querySelectorAll('[data-action="close-stats"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ tornStatsOpen: false }));
+        });
+
+        document.querySelectorAll('[data-action="close-network"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ networkOpen: false }));
+        });
+
+        document.querySelectorAll('[data-action="close-settings"]').forEach((button) => {
+          button.addEventListener("click", () => setState({ settingsOpen: false }));
+        });
+
+        const tornUrl = document.getElementById("torn-url");
+        if (tornUrl) {
+          tornUrl.addEventListener("change", (event) => setState({ tornUrl: event.target.value }));
+        }
+
+        const discordUrl = document.getElementById("discord-url");
+        if (discordUrl) {
+          discordUrl.addEventListener("change", (event) => setState({ discordUrl: event.target.value }));
+        }
+
+        const preset = document.getElementById("torn-preset");
+        if (preset) {
+          preset.addEventListener("change", (event) => {
+            const nextPreset = event.target.value;
+            setState({
+              tornPreset: nextPreset,
+              tornUrl: resolvePreset(nextPreset)
+            });
+          });
+        }
+
+        const tornFrame = document.getElementById("torn-frame");
+        if (tornFrame) {
+          tornFrame.addEventListener("load", () => setState({ embedState: "Loaded" }));
+          tornFrame.addEventListener("error", () => setState({ embedState: "Blocked" }));
+        }
+      }
+
+      function reloadSurfaces() {
+        const tornFrame = document.getElementById("torn-frame");
+        if (tornFrame) {
+          tornFrame.src = state.tornUrl;
+          setState({ embedState: "Reloading" });
+        }
+      }
+
+      function refreshNetwork() {
+        setState({ networkOnline: navigator.onLine });
+      }
+
+      function formatMoney(input) {
+        if (input === undefined || input === null || input === "") return "$0";
+        const numeric = typeof input === "string" ? Number(String(input).replace(/[^0-9.-]/g, "")) : input;
+        if (!Number.isFinite(numeric)) return "$0";
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(numeric);
+      }
+
+      function formatCompactNumber(input) {
+        if (typeof input !== "number" || !Number.isFinite(input)) return "Unknown";
+        return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(input);
+      }
+
+      function formatWholeNumber(input) {
+        if (typeof input !== "number" || !Number.isFinite(input)) return "Unknown";
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(input);
+      }
+
+      function findCompareStat(compareData, keys) {
+        if (!compareData || typeof compareData !== "object") return undefined;
+        for (const key of keys) {
+          const entry = compareData[key];
+          if (entry && typeof entry === "object" && "amount" in entry) return entry.amount;
+        }
+        return undefined;
+      }
+
+      function formatRelativeTimestamp(timestamp) {
+        if (typeof timestamp !== "number" || !Number.isFinite(timestamp) || timestamp <= 0) return "Unknown";
+        const diffSeconds = Math.max(0, Math.floor(Date.now() / 1000) - timestamp);
+        if (diffSeconds < 60) return `${diffSeconds}s ago`;
+        if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
+        if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
+        return `${Math.floor(diffSeconds / 86400)}d ago`;
+      }
+
+      async function loadTornStats() {
+        try {
+          const userResp = await fetch(`https://api.torn.com/user/?selections=basic,battlestats,networth,personalstats,bars&key=${TORN_API_KEY}`);
+          const userData = await userResp.json();
+          const userKey = encodeURIComponent(userData?.player_id || userData?.name || "self");
+          const [spyResp, graphResp] = await Promise.all([
+            fetch(`https://www.tornstats.com/api/v2/${TORNSTATS_API_KEY}/spy/user/${userKey}`),
+            fetch(`https://www.tornstats.com/api/v2/${TORNSTATS_API_KEY}/battlestats/graph`)
+          ]);
+          const spy = await spyResp.json();
+          const graph = await graphResp.json();
+          const compareData = spy?.compare?.data;
+          const spyData = spy?.compare?.spy;
+          const graphEntries = Array.isArray(graph?.data) ? graph.data : [];
+          const latestGraph = graphEntries.length ? graphEntries[graphEntries.length - 1] : null;
+          const personal = userData?.personalstats || {};
+          const total = spyData?.total ?? userData?.total ?? latestGraph?.total;
+          const wallet = userData?.networth?.wallet;
+          const freshness = spyData?.difference ?? (latestGraph?.timestamp ? formatRelativeTimestamp(latestGraph.timestamp) : (spy?.compare?.status ? "Spy Unavailable" : "Unknown"));
+          const combatMeta = spyData?.fair_fight_bonus !== undefined ? `FF ${spyData.fair_fight_bonus}` : freshness;
+
+          setState({
+            stats: {
+              battleStats: total !== undefined ? formatCompactNumber(total) : "Unknown",
+              netWorth: formatMoney(personal?.networth ?? userData?.networth?.total ?? findCompareStat(compareData, ["Networth", "Net Worth"])),
+              fairFight: spyData?.fair_fight_bonus !== undefined ? `FF ${spyData.fair_fight_bonus}` : "Unknown",
+              freshness,
+              attacksWon: formatWholeNumber(personal?.attackswon ?? findCompareStat(compareData, ["Attacks Won", "Attack Wins"])),
+              defendsWon: formatWholeNumber(personal?.defendswon ?? findCompareStat(compareData, ["Defends Won", "Defendswin", "Defends Won."])),
+              xanaxTaken: formatWholeNumber(personal?.xantaken ?? findCompareStat(compareData, ["Xanax Taken", "Xanax taken"])),
+              refills: formatWholeNumber(personal?.refills ?? findCompareStat(compareData, ["Refills"]))
+            },
+            player: {
+              ...state.player,
+              name: userData?.name || state.player.name,
+              level: userData?.level || state.player.level,
+              money: formatMoney(wallet),
+              combat: total !== undefined ? formatCompactNumber(total) : state.player.combat,
+              combatMeta,
+              energy: userData?.energy ? { current: userData.energy.current, max: userData.energy.maximum } : state.player.energy,
+              happiness: userData?.happy ? { current: userData.happy.current, max: userData.happy.maximum } : state.player.happiness,
+              nerve: userData?.nerve ? { current: userData.nerve.current, max: userData.nerve.maximum } : state.player.nerve,
+              life: userData?.life ? { current: userData.life.current, max: userData.life.maximum } : state.player.life,
+            },
+          });
+        } catch {
+          setState({
+            stats: {
+              battleStats: "Blocked",
+              netWorth: "Blocked",
+              fairFight: "Blocked",
+              freshness: "Blocked",
+              attacksWon: "Blocked",
+              defendsWon: "Blocked",
+              xanaxTaken: "Blocked",
+              refills: "Blocked"
+            }
+          });
+        }
+      }
+
+      function tickClock() {
+        setState({ tct: formatClock(new Date()) });
+      }
+
+      render();
+      tickClock();
+      loadTornStats();
+      refreshNetwork();
+      window.setInterval(tickClock, 1000);
+      window.addEventListener("online", refreshNetwork);
+      window.addEventListener("offline", refreshNetwork);
+    </script>
+  </body>
+  </html>
