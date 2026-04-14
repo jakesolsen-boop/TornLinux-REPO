@@ -1,0 +1,27 @@
+#!/bin/bash
+set -u
+
+HOME_DIR="${HOME:-/home/tornuser}"
+BASE_DIR="${HOME_DIR}/TornLinux"
+SHOT_DIR="${BASE_DIR}/Screenshots"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+TARGET_PATH="${SHOT_DIR}/tornlinux-screenshot-${STAMP}.png"
+
+mkdir -p "${SHOT_DIR}" "${BASE_DIR}/Logs" "${BASE_DIR}/Debug" 2>/dev/null || true
+
+if command -v scrot >/dev/null 2>&1; then
+  if scrot "${TARGET_PATH}" >/dev/null 2>&1; then
+    if command -v notify-send >/dev/null 2>&1; then
+      notify-send "TornLinux" "Screenshot saved to ${TARGET_PATH}"
+    fi
+    printf '%s\n' "${TARGET_PATH}"
+    exit 0
+  fi
+fi
+
+if command -v notify-send >/dev/null 2>&1; then
+  notify-send "TornLinux" "Screenshot capture failed"
+fi
+
+echo "Screenshot capture failed" >&2
+exit 1

@@ -1,0 +1,5 @@
+"/usr/local/bin/tornlinux-save-screenshot"
+  Print
+
+"sudo /usr/local/bin/tornlinux-debug-snapshot manual"
+  Control+Print

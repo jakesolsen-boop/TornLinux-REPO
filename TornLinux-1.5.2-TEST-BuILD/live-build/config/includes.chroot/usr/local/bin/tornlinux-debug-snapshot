@@ -1,0 +1,43 @@
+#!/bin/bash
+set -u
+
+TARGET_USER="${SUDO_USER:-tornuser}"
+TARGET_HOME="$(getent passwd "${TARGET_USER}" | cut -d: -f6)"
+
+if [[ -z "${TARGET_HOME}" ]]; then
+  echo "Unable to resolve target home for ${TARGET_USER}" >&2
+  exit 1
+fi
+
+BASE_DIR="${TARGET_HOME}/TornLinux"
+DEBUG_DIR="${BASE_DIR}/Debug"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+LABEL="${1:-manual}"
+OUT_DIR="${DEBUG_DIR}/${STAMP}-${LABEL}"
+
+mkdir -p "${OUT_DIR}"
+
+capture() {
+  local name="$1"
+  shift
+  "$@" > "${OUT_DIR}/${name}.txt" 2>&1 || true
+}
+
+capture proc-cmdline cat /proc/cmdline
+capture lsblk lsblk -f
+capture blkid blkid
+capture mount mount
+capture df df -h
+capture journal journalctl -b --no-pager
+capture dmesg dmesg
+
+if [[ -d /run/initramfs ]]; then
+  capture initramfs-find find /run/initramfs -maxdepth 3 -type f
+fi
+
+if [[ -f /proc/sys/kernel/random/boot_id ]]; then
+  cp /proc/sys/kernel/random/boot_id "${OUT_DIR}/boot_id.txt"
+fi
+
+chown -R "${TARGET_USER}:${TARGET_USER}" "${BASE_DIR}" 2>/dev/null || true
+printf '%s\n' "${OUT_DIR}"

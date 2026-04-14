@@ -19,6 +19,18 @@ EOF
 # Ensure Openbox autostart exists
 mkdir -p /home/tornuser/.config/openbox
 cat >/home/tornuser/.config/openbox/autostart <<'EOF'
+if command -v /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 >/dev/null 2>&1; then
+  /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 >/dev/null 2>&1 &
+fi
+
+if command -v xfce4-power-manager >/dev/null 2>&1; then
+  xfce4-power-manager >/dev/null 2>&1 &
+fi
+
+if command -v xbindkeys >/dev/null 2>&1; then
+  xbindkeys >/dev/null 2>&1 &
+fi
+
 /usr/local/bin/tornlinux-session-start &
 EOF
 
@@ -42,11 +54,21 @@ chmod 755 /var/lib/lightdm/data || true
 chmod +x /usr/local/bin/tornlinux-electron-launch || true
 chmod +x /usr/local/bin/tornlinux-session-start || true
 chmod +x /usr/local/bin/tornlinux-installer || true
+chmod +x /usr/local/bin/tornlinux-save-screenshot || true
+chmod +x /usr/local/bin/tornlinux-debug-snapshot || true
+
+# Keep the host workspace user-owned, then normalize the app payload in the image.
+if [ -d /opt/tornlinux-app ]; then
+  chown -R root:root /opt/tornlinux-app || true
+  chmod -R a+rX /opt/tornlinux-app || true
+  chmod +x /opt/tornlinux-app/TornLinux || true
+fi
 
 # Allow the live session to run the custom installer backend without interactive sudo prompts.
 mkdir -p /etc/sudoers.d
 cat >/etc/sudoers.d/tornlinux-installer <<'EOF'
 tornuser ALL=(root) NOPASSWD: /usr/local/bin/tornlinux-installer
+tornuser ALL=(root) NOPASSWD: /usr/local/bin/tornlinux-debug-snapshot
 EOF
 chmod 440 /etc/sudoers.d/tornlinux-installer
 

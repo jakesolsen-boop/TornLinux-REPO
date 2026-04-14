@@ -3,6 +3,7 @@ const { IPC_CHANNELS } = require('./runtime/ipc.cjs');
 
 contextBridge.exposeInMainWorld('tornlinux', {
   getAppVersion: () => ipcRenderer.invoke('tornlinux:getAppVersion'),
+  getBootIntent: () => ipcRenderer.invoke('tornlinux:getBootIntent'),
   getSettings: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SETTINGS),
   setSettings: (partial) => ipcRenderer.invoke(IPC_CHANNELS.SET_SETTINGS, partial),
   toggleLayout: () => ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_LAYOUT),

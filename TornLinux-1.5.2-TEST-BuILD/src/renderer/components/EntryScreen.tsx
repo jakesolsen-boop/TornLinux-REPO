@@ -28,8 +28,8 @@ export function EntryScreen({
             time.
           </p>
           <p>
-            Use the boot menu entry named <span>TornLinux Live (Persistence)</span> when your USB has a persistence
-            partition configured.
+            Persistence is temporarily disabled in this dracut validation build while the USB overlay path is being
+            rebuilt.
           </p>
         </div>
 

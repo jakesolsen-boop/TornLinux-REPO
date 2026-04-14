@@ -11,7 +11,7 @@ import { FirstUseLanding } from './components/FirstUseLanding';
 import { EntryScreen } from './components/EntryScreen';
 import { InstallerScreen } from './components/InstallerScreen';
 import { BootSplash } from './components/BootSplash';
-import type { AppConfig, AppSettings, BootIntent, ConfigStatus } from '@shared/types';
+import type { AppConfig, AppSettings, BootIntent, ConfigStatus, LauncherResult } from '@shared/types';
 import './styles/app.css';
 import './styles/settings-drawer.css';
 import './styles/first-run-setup.css';
@@ -53,25 +53,30 @@ export function App() {
   useEffect(() => {
     const load = async () => {
       const minSplashDelay = new Promise((resolve) => window.setTimeout(resolve, 1500));
-      const [nextSettings, nextConfigStatus, nextConfig, nextAppVersion, nextBootIntent] = await Promise.all([
-        window.tornlinux?.getSettings(),
-        window.tornlinux?.getConfigStatus(),
-        window.tornlinux?.getConfig(),
-        window.tornlinux?.getAppVersion?.(),
-        window.tornlinux?.getBootIntent?.(),
-      ]);
-      await minSplashDelay;
-      if (nextSettings) setSettings(nextSettings);
-      if (nextConfigStatus) setConfigStatus(nextConfigStatus);
-      if (nextConfig) setConfig(nextConfig);
-      if (nextAppVersion) setAppVersion(`v${nextAppVersion}`);
+      try {
+        const [nextSettings, nextConfigStatus, nextConfig, nextAppVersion, nextBootIntent] = await Promise.all([
+          window.tornlinux?.getSettings(),
+          window.tornlinux?.getConfigStatus(),
+          window.tornlinux?.getConfig(),
+          window.tornlinux?.getAppVersion?.(),
+          window.tornlinux?.getBootIntent?.(),
+        ]);
+        await minSplashDelay;
+        if (nextSettings) setSettings(nextSettings);
+        if (nextConfigStatus) setConfigStatus(nextConfigStatus);
+        if (nextConfig) setConfig(nextConfig);
+        if (nextAppVersion) setAppVersion(`v${nextAppVersion}`);
 
-      const bootIntent = nextBootIntent as BootIntent | undefined;
-      if (bootIntent?.installer) {
-        setEntryMode('install');
-        setBootStage('installer');
-        return;
+        const bootIntent = nextBootIntent as BootIntent | undefined;
+        if (bootIntent?.installer) {
+          setEntryMode('install');
+          setBootStage('installer');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load startup state', error);
       }
+      await minSplashDelay;
 
       const storedMode = typeof window !== 'undefined' ? localStorage.getItem(ENTRY_MODE_KEY) : null;
       if (storedMode === 'install' || storedMode === 'live') setEntryMode(storedMode);
@@ -183,13 +188,23 @@ export function App() {
   };
 
   const openNetworkSettings = async () => {
-    const result = await window.tornlinux?.launchNetworkSettings?.();
-    setActionMessage(result?.ok ? 'Opening network settings' : 'Network settings unavailable in this session');
+    const result: LauncherResult | undefined = await window.tornlinux?.launchNetworkSettings?.();
+    setActionMessage(
+      result?.ok
+        ? `Opening network settings (${result.method})`
+        : (result?.detail || 'Network settings unavailable in this session'),
+    );
+    return result;
   };
 
   const openBluetoothSettings = async () => {
-    const result = await window.tornlinux?.launchBluetoothSettings?.();
-    setActionMessage(result?.ok ? 'Opening bluetooth settings' : 'Bluetooth settings unavailable in this session');
+    const result: LauncherResult | undefined = await window.tornlinux?.launchBluetoothSettings?.();
+    setActionMessage(
+      result?.ok
+        ? `Opening bluetooth settings (${result.method})`
+        : (result?.detail || 'Bluetooth settings unavailable in this session'),
+    );
+    return result;
   };
 
   if (bootStage === 'splash') {
@@ -247,6 +262,7 @@ export function App() {
           player={player}
           tornStats={tornStats}
           networkOnline={isOnline}
+          settingsAttention={!hasValidApi}
           onToggleTornStats={toggleTornStats}
           onOpenNetworkSettings={openNetworkSettings}
           onOpenSettings={() => setSettingsOpen(true)}

@@ -41,6 +41,9 @@ node -c "$PROJECT_ROOT/electron/preload.cjs" >/dev/null 2>&1 || fail "electron/p
 [[ -f "$PROJECT_ROOT/live-build/config/includes.chroot/opt/tornlinux-app/TornLinux" ]] || fail "Packaged Electron binary missing: live-build/config/includes.chroot/opt/tornlinux-app/TornLinux"
 
 required_files=(
+  "live-build/config/common"
+  "live-build/config/binary"
+  "live-build/config/package-lists/live.list.chroot"
   "live-build/config/package-lists/tornlinux.list.chroot"
   "live-build/config/package-lists/tornlinux-electron-runtime.list.chroot"
   "live-build/config/includes.binary/boot/grub/grub.cfg"
@@ -48,6 +51,11 @@ required_files=(
   "live-build/config/includes.chroot/etc/live/config.conf.d/tornlinux.conf"
   "live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf"
   "live-build/config/hooks/live/0100-tornlinux-setup.chroot"
+  "live-build/config/includes.chroot/usr/local/bin/tornlinux-session-start"
+  "live-build/config/includes.chroot/usr/local/bin/tornlinux-electron-launch"
+  "live-build/config/includes.chroot/usr/local/bin/tornlinux-save-screenshot"
+  "live-build/config/includes.chroot/usr/local/bin/tornlinux-debug-snapshot"
+  "live-build/config/includes.chroot/home/tornuser/.xbindkeysrc"
   "live-build/config/includes.chroot/usr/share/tornlinux/splash.png"
   "live-build/config/includes.chroot/usr/share/tornlinux/wallpaper.png"
   "live-build/config/includes.chroot/usr/share/plymouth/themes/tornlinux/background.png"
@@ -61,12 +69,13 @@ done
 [[ -x "$PROJECT_ROOT/scripts/configure-live-build.sh" ]] || fail "scripts/configure-live-build.sh is not executable"
 [[ -x "$PROJECT_ROOT/scripts/build-iso.sh" ]] || fail "scripts/build-iso.sh is not executable"
 [[ -x "$PROJECT_ROOT/scripts/write-usb.sh" ]] || fail "scripts/write-usb.sh is not executable"
+[[ -x "$PROJECT_ROOT/scripts/audit-startup-deployment.sh" ]] || fail "scripts/audit-startup-deployment.sh is not executable"
 
 BRAND_SOURCE="$PROJECT_ROOT/assets/brand/tornlinux_logo_circle.png"
 [[ -f "$BRAND_SOURCE" ]] || fail "Brand logo missing for generated build assets: assets/brand/tornlinux_logo_circle.png"
 summary "Using generated build assets from brand source: $BRAND_SOURCE"
 
-grep -qs 'cp -a "\$APP_DIR"/\. "\$TARGET_DIR"/' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not using deterministic staged app copy"
+grep -qs 'cp -R --no-preserve=ownership "\$APP_DIR"/\. "\$TARGET_DIR"/' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not using deterministic staged app copy without inherited ownership"
 grep -qs 'chmod -R 755 "\$TARGET_DIR"' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not applying staged app execute permissions"
 grep -qs 'bash ./scripts/stamp-assets.sh' "$PROJECT_ROOT/scripts/prepare-live-build.sh" || fail "prepare-live-build.sh is not invoking stamp-assets via bash"
 [[ -x "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" ]] || fail "Hook is not executable: live-build/config/hooks/live/0100-tornlinux-setup.chroot"
@@ -79,8 +88,21 @@ grep -qs "previewInstallerPlan" "$PROJECT_ROOT/electron/preload.cjs" || fail "pr
 grep -qs "getSystemVolume" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing getSystemVolume"
 grep -qs "setSystemVolume" "$PROJECT_ROOT/electron/preload.cjs" || fail "preload missing setSystemVolume"
 
+"$PROJECT_ROOT/scripts/audit-startup-deployment.sh" || fail "startup deployment audit failed"
+
 if grep -Rqs '^libnsswinbind$' "$PROJECT_ROOT/live-build/config/package-lists"; then
   fail "Invalid package detected in package lists: libnsswinbind"
+fi
+
+grep -qs '^LB_INITRAMFS="dracut-live"$' "$PROJECT_ROOT/live-build/config/common" || fail "live-build/config/common is not configured for dracut-live"
+grep -qs '^dracut-live$' "$PROJECT_ROOT/live-build/config/package-lists/live.list.chroot" || fail "dracut-live missing from live.list.chroot"
+if grep -qs '^live-boot$' "$PROJECT_ROOT/live-build/config/package-lists/live.list.chroot"; then
+  fail "live-boot must not be present in live.list.chroot for the dracut validation build"
+fi
+grep -qs 'root=live:CDLABEL=' "$PROJECT_ROOT/live-build/config/binary" || fail "config/binary is missing dracut live-root arguments"
+grep -qs 'rd.live.squashimg=filesystem.squashfs' "$PROJECT_ROOT/live-build/config/binary" || fail "config/binary is missing dracut squashfs arguments"
+if grep -qs ' persistence ' "$PROJECT_ROOT/live-build/config/includes.binary/boot/grub/grub.cfg" || grep -qs ' persistence ' "$PROJECT_ROOT/live-build/config/includes.binary/isolinux/live.cfg"; then
+  fail "bootloader configs still force Debian persistence on the dracut validation build"
 fi
 
 grep -qs '^lightdm$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "lightdm missing from tornlinux.list.chroot"
@@ -89,17 +111,25 @@ grep -qs '^accountsservice$' "$PROJECT_ROOT/live-build/config/package-lists/torn
 grep -qs '^blueman$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "blueman missing from tornlinux.list.chroot"
 grep -qs '^alsa-utils$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "alsa-utils missing from tornlinux.list.chroot"
 grep -qs '^bluez$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "bluez missing from tornlinux.list.chroot"
+grep -qs '^xbindkeys$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "xbindkeys missing from tornlinux.list.chroot"
+grep -qs '^scrot$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "scrot missing from tornlinux.list.chroot"
+grep -qs '^libnotify-bin$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "libnotify-bin missing from tornlinux.list.chroot"
 grep -qs '^pipewire$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "pipewire missing from tornlinux.list.chroot"
 grep -qs '^pipewire-pulse$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "pipewire-pulse missing from tornlinux.list.chroot"
 grep -qs '^wireplumber$' "$PROJECT_ROOT/live-build/config/package-lists/tornlinux.list.chroot" || fail "wireplumber missing from tornlinux.list.chroot"
 grep -qs 'LIVE_USERNAME="tornuser"' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/live/config.conf.d/tornlinux.conf" || fail "LIVE_USERNAME override missing or incorrect"
 grep -qs 'autologin-user=tornuser' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf" || fail "LightDM autologin user missing or incorrect"
 grep -qs 'autologin-session=openbox' "$PROJECT_ROOT/live-build/config/includes.chroot/etc/lightdm/lightdm.conf.d/20-tornlinux.conf" || fail "LightDM autologin session missing or incorrect"
-grep -qs 'LOG="${HOME:-/home/tornuser}/.tornlinux-session.log"' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-session-start" || fail "session-start log path is not user-writable"
-grep -qs 'LOG="${HOME:-/home/tornuser}/.tornlinux-electron.log"' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-electron-launch" || fail "electron-launch log path is not user-writable"
+grep -qs 'LOG="${LOG_DIR}/session.log"' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-session-start" || fail "session-start log path is not using the persistent TornLinux log directory"
+grep -qs 'LOG="${BASE_DIR}/Logs/electron.log"' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-electron-launch" || fail "electron-launch log path is not using the persistent TornLinux log directory"
+grep -qs 'CURRENT_BOOT_ID=' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-session-start" || fail "session-start is not capturing one debug snapshot per boot"
+grep -qs 'scrot' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-save-screenshot" || fail "screenshot helper is not using scrot"
+grep -qs 'journalctl -b --no-pager' "$PROJECT_ROOT/live-build/config/includes.chroot/usr/local/bin/tornlinux-debug-snapshot" || fail "debug snapshot helper is not capturing boot journal output"
 grep -qs 'mkdir -p /var/lib/lightdm/data' "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "hook does not create /var/lib/lightdm/data"
 grep -qs 'touch /home/tornuser/.Xauthority' "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "hook does not create .Xauthority"
 grep -qs "echo 'tornuser:tornlinux' | chpasswd" "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "Hook does not set tornuser password"
+grep -qs 'NOPASSWD: /usr/local/bin/tornlinux-debug-snapshot' "$PROJECT_ROOT/live-build/config/hooks/live/0100-tornlinux-setup.chroot" || fail "Hook does not allow passwordless debug snapshot capture"
+grep -qs 'Print' "$PROJECT_ROOT/live-build/config/includes.chroot/home/tornuser/.xbindkeysrc" || fail "xbindkeys screenshot hotkey is missing"
 
 summary "Validating version propagation integrity"
 grep -qs "^${CURRENT_VERSION}$" "$PROJECT_ROOT/VERSION" || fail "VERSION file unreadable"

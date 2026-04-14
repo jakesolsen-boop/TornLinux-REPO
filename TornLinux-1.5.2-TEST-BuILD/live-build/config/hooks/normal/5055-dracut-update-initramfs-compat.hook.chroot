@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -e
+
+if [ ! -d /usr/share/doc/dracut-live ]
+then
+	exit 0
+fi
+
+cat >/usr/sbin/update-initramfs <<'EOF'
+#!/bin/sh
+set -e
+
+mode=""
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		-u|--update)
+			mode="update"
+			;;
+		-c|--create)
+			mode="create"
+			;;
+		-d|--delete)
+			exit 0
+			;;
+	esac
+	shift
+done
+
+case "${mode}" in
+	update|create|"")
+		exec dracut --force --regenerate-all
+		;;
+	*)
+		exec dracut --force --regenerate-all
+		;;
+esac
+EOF
+
+chmod 0755 /usr/sbin/update-initramfs

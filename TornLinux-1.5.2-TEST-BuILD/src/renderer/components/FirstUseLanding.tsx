@@ -1,4 +1,5 @@
 import React from 'react';
+import type { LauncherResult } from '@shared/types';
 
 export function FirstUseLanding({
   isOnline,
@@ -15,23 +16,38 @@ export function FirstUseLanding({
   hasTornStatsApiKey: boolean;
   initialTornApiKey?: string;
   initialTornStatsApiKey?: string;
-  onOpenNetworkSettings: () => void;
+  onOpenNetworkSettings: () => Promise<LauncherResult | undefined>;
   onSaveApiKeys: (config: { tornApiKey: string; tornStatsApiKey: string }) => Promise<void>;
   onContinue: () => void;
 }) {
   const [tornApiKey, setTornApiKey] = React.useState(initialTornApiKey || '');
   const [tornStatsApiKey, setTornStatsApiKey] = React.useState(initialTornStatsApiKey || '');
   const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState('');
 
   const save = async () => {
     setSaving(true);
+    setMessage('');
     try {
       await onSaveApiKeys({
         tornApiKey,
         tornStatsApiKey,
       });
+      setMessage('API keys saved');
+    } catch {
+      setMessage('Saving API keys failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openNetwork = async () => {
+    setMessage('');
+    try {
+      const result = await onOpenNetworkSettings();
+      setMessage(result?.ok ? `Opening network settings (${result.method})` : (result?.detail || 'Network settings unavailable'));
+    } catch {
+      setMessage('Network settings unavailable');
     }
   };
 
@@ -41,7 +57,7 @@ export function FirstUseLanding({
         <div className="tls-landingEyebrow">First-use setup</div>
         <h1 className="tls-landingTitle">Prepare TornLinux</h1>
         <p className="tls-landingText">
-          Confirm network access, add your Torn API key and TornStats read-only key, then continue into the live environment.
+          Confirm network access, add your Torn API key and TornStats read-only key, or skip setup and launch straight into the live environment.
         </p>
 
         <div className="tls-landingSection">
@@ -50,7 +66,7 @@ export function FirstUseLanding({
             <span className={`tls-networkBadge ${isOnline ? 'is-online' : 'is-offline'}`}>
               {isOnline ? 'Online' : 'Offline'}
             </span>
-            <button type="button" onClick={onOpenNetworkSettings}>Open Network Settings</button>
+            <button type="button" onClick={() => void openNetwork()}>Open Network Settings</button>
           </div>
         </div>
 
@@ -82,8 +98,9 @@ export function FirstUseLanding({
         </div>
 
         <div className="tls-landingActions">
-          <button type="button" className="tls-landingContinue" onClick={onContinue}>Continue</button>
+          <button type="button" className="tls-landingContinue" onClick={onContinue}>Skip Setup And Launch</button>
         </div>
+        {message ? <div className="tls-installerNote">{message}</div> : null}
       </div>
     </div>
   );

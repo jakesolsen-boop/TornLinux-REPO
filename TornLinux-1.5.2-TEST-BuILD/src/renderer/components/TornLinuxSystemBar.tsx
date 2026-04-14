@@ -62,14 +62,22 @@ export default function TornLinuxSystemBar({
   const localTime = useMemo(() => formatClock(now, settings.timezone || 'America/Chicago'), [now, settings.timezone]);
 
   const openSound = async () => {
-    const result = await window.tornlinux?.launchSoundSettings?.();
-    setStatus(result?.ok ? `Sound: ${result.method}` : 'Sound settings unavailable');
+    try {
+      const result = await window.tornlinux?.launchSoundSettings?.();
+      setStatus(result?.ok ? `Sound: ${result.method}` : (result?.detail || 'Sound settings unavailable'));
+    } catch {
+      setStatus('Sound settings unavailable');
+    }
     setTimeout(() => setStatus(''), 2400);
   };
 
   const openNetwork = async () => {
-    const result = await window.tornlinux?.launchNetworkSettings?.();
-    setStatus(result?.ok ? `Network: ${result.method}` : 'Network settings unavailable');
+    try {
+      const result = await window.tornlinux?.launchNetworkSettings?.();
+      setStatus(result?.ok ? `Network: ${result.method}` : (result?.detail || 'Network settings unavailable'));
+    } catch {
+      setStatus('Network settings unavailable');
+    }
     setTimeout(() => setStatus(''), 2400);
   };
 

@@ -1,0 +1,6 @@
+dracut-live
+dracut
+dracut-config-generic
+live-config
+live-config-systemd
+systemd-sysv

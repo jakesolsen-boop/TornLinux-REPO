@@ -26,6 +26,7 @@ type Props = {
   player: PlayerSnapshot;
   tornStats: TornStatsSummary;
   networkOnline: boolean;
+  settingsAttention?: boolean;
   onToggleTornStats: () => void;
   onOpenNetworkSettings: () => void;
   onOpenSettings: () => void;
@@ -95,6 +96,7 @@ export function TornLinuxHeader({
   player,
   tornStats,
   networkOnline,
+  settingsAttention = false,
   onToggleTornStats,
   onOpenNetworkSettings,
   onOpenSettings,
@@ -183,9 +185,7 @@ export function TornLinuxHeader({
       <div className="tlRight">
         <div className="tlTctReadout" aria-label="Torn City Time">
           <TimeTctIcon className="tlTctReadoutIcon" />
-          <span className="tlTctReadoutDivider" aria-hidden="true" />
           <div className="tlTctReadoutBody">
-            <span className="tlTctReadoutLabel">Torn City Time</span>
             <span className="tlTctReadoutValue">{tct}</span>
           </div>
         </div>
@@ -201,7 +201,12 @@ export function TornLinuxHeader({
               <NetworkStatusIcon className="tlActionIconSvg" />
             </button>
 
-            <button className="tlAction tlAction--icon tlAction--settings" onClick={onOpenSettings} type="button" aria-label="Open settings">
+            <button
+              className={`tlAction tlAction--icon tlAction--settings ${settingsAttention ? "isWarning" : ""}`}
+              onClick={onOpenSettings}
+              type="button"
+              aria-label="Open settings"
+            >
               <SettingsIcon className="tlActionIconSvg" />
             </button>
           </div>

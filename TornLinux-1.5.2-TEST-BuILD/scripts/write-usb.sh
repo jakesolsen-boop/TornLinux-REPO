@@ -4,23 +4,22 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/write-usb.sh --iso <path-to-iso> --device <disk-device> [--persistence-size <GiB>] [--no-persistence]
+  scripts/write-usb.sh --iso <path-to-iso> --device <disk-device> [--no-persistence]
 
 Examples:
   scripts/write-usb.sh --iso live-build/TornLinux-1.5.2-amd64.hybrid.iso --device /dev/sdb
-  scripts/write-usb.sh --iso live-build/TornLinux-1.5.2-amd64.hybrid.iso --device /dev/nvme1n1 --persistence-size 32
+  scripts/write-usb.sh --iso live-build/TornLinux-1.5.2-amd64.hybrid.iso --device /dev/nvme1n1 --no-persistence
 
 Notes:
   - This destroys the target device.
-  - Persistence stores live-session changes such as TornLinux settings and API keys across reboots.
-  - The script writes the ISO first, then optionally creates a persistence partition in the remaining space.
+  - The current dracut validation path writes a bootable USB only.
+  - Persistent overlays are not wired up here yet; the old Debian-style persistence.conf flow is intentionally disabled.
 EOF
 }
 
 ISO_PATH=""
 DEVICE=""
-PERSISTENCE_SIZE_GIB="8"
-ENABLE_PERSISTENCE="1"
+ENABLE_PERSISTENCE="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,10 +29,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --device)
       DEVICE="${2:-}"
-      shift 2
-      ;;
-    --persistence-size)
-      PERSISTENCE_SIZE_GIB="${2:-}"
       shift 2
       ;;
     --no-persistence)
@@ -83,60 +78,10 @@ echo "[write-usb] Writing ISO to $DEVICE"
 sudo dd if="$ISO_PATH" of="$DEVICE" bs=16M status=progress oflag=sync conv=fsync
 sudo sync
 
-if [[ "$ENABLE_PERSISTENCE" != "1" ]]; then
-  echo "[write-usb] ISO written without persistence partition"
-  exit 0
-fi
-
-echo "[write-usb] Probing post-write partition table"
-sudo partprobe "$DEVICE"
-sleep 2
-
-ISO_END_MIB="$(sudo parted -s "$DEVICE" unit MiB print free | awk '/Free Space/ { free_start=$1 } END { sub("MiB","",free_start); print free_start }')"
-DISK_END_MIB="$(sudo parted -s "$DEVICE" unit MiB print free | awk '/Disk .*MiB/ { gsub("MiB","",$3); print $3 }')"
-
-[[ -n "$ISO_END_MIB" && -n "$DISK_END_MIB" ]] || { echo "[write-usb] Could not determine free space for persistence" >&2; exit 1; }
-
-START_MIB="$(printf '%.0f' "$ISO_END_MIB")"
-END_MIB="$(printf '%.0f' "$DISK_END_MIB")"
-REQUEST_MIB="$(( PERSISTENCE_SIZE_GIB * 1024 ))"
-AVAILABLE_MIB="$(( END_MIB - START_MIB ))"
-
-if (( AVAILABLE_MIB < 1024 )); then
-  echo "[write-usb] Not enough free space left on device for persistence" >&2
+if [[ "$ENABLE_PERSISTENCE" = "1" ]]; then
+  echo "[write-usb] Persistence creation is disabled in the current dracut validation path." >&2
+  echo "[write-usb] Re-run with --no-persistence, or update the script for dracut overlay handling first." >&2
   exit 1
 fi
 
-if (( REQUEST_MIB > AVAILABLE_MIB )); then
-  REQUEST_MIB="$AVAILABLE_MIB"
-fi
-
-PERSIST_START="${START_MIB}MiB"
-PERSIST_END="$(( START_MIB + REQUEST_MIB ))MiB"
-
-echo "[write-usb] Creating persistence partition from $PERSIST_START to $PERSIST_END"
-sudo parted -s "$DEVICE" mkpart primary ext4 "$PERSIST_START" "$PERSIST_END"
-sudo partprobe "$DEVICE"
-sleep 2
-
-PERSIST_PART="$(lsblk -lnpo NAME,TYPE "$DEVICE" | awk '$2 == "part" { print $1 }' | tail -n 1)"
-[[ -n "$PERSIST_PART" ]] || { echo "[write-usb] Could not find persistence partition after creation" >&2; exit 1; }
-
-echo "[write-usb] Formatting persistence partition: $PERSIST_PART"
-sudo mkfs.ext4 -F -L persistence "$PERSIST_PART"
-
-TMP_MNT="$(mktemp -d)"
-cleanup() {
-  sudo umount "$TMP_MNT" >/dev/null 2>&1 || true
-  rmdir "$TMP_MNT" >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
-
-sudo mount "$PERSIST_PART" "$TMP_MNT"
-echo "/ union" | sudo tee "$TMP_MNT/persistence.conf" >/dev/null
-sudo umount "$TMP_MNT"
-rmdir "$TMP_MNT"
-trap - EXIT
-
-echo "[write-usb] Persistence enabled on $PERSIST_PART"
-echo "[write-usb] Boot will use persistence automatically when this USB starts TornLinux."
+echo "[write-usb] ISO written without persistence partition"

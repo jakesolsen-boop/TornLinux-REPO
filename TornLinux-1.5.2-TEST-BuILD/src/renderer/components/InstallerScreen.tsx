@@ -8,6 +8,10 @@ export function InstallerScreen({
   version: string;
   onBack: () => void;
 }) {
+  const mountedRef = React.useRef(true);
+  const refreshRequestRef = React.useRef(0);
+  const planRequestRef = React.useRef(0);
+  const applyRequestRef = React.useRef(0);
   const [mode, setMode] = React.useState<InstallerMode>('auto');
   const [disks, setDisks] = React.useState<InstallerDisk[]>([]);
   const [selectedDisk, setSelectedDisk] = React.useState('');
@@ -19,13 +23,34 @@ export function InstallerScreen({
   const [message, setMessage] = React.useState('');
   const [applyResult, setApplyResult] = React.useState<InstallerApplyResult | null>(null);
 
+  React.useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
+
   const refreshDisks = React.useCallback(async () => {
+    const requestId = refreshRequestRef.current + 1;
+    refreshRequestRef.current = requestId;
     setLoading(true);
-    const nextDisks = await window.tornlinux?.getInstallerDisks?.();
-    const available = nextDisks || [];
-    setDisks(available);
-    setSelectedDisk((current) => current || available[0]?.path || '');
-    setLoading(false);
+    setMessage('');
+    try {
+      const nextDisks = await window.tornlinux?.getInstallerDisks?.();
+      if (!mountedRef.current || refreshRequestRef.current !== requestId) return;
+      const available = nextDisks || [];
+      setDisks(available);
+      setSelectedDisk((current) => (available.some((disk) => disk.path === current) ? current : available[0]?.path || ''));
+      setApplyResult(null);
+    } catch (error) {
+      if (!mountedRef.current || refreshRequestRef.current !== requestId) return;
+      console.error('Failed to load installer disks', error);
+      setDisks([]);
+      setSelectedDisk('');
+      setApplyResult(null);
+      setMessage('Unable to scan disks right now.');
+    } finally {
+      if (mountedRef.current && refreshRequestRef.current === requestId) {
+        setLoading(false);
+      }
+    }
   }, []);
 
   React.useEffect(() => {
@@ -35,13 +60,31 @@ export function InstallerScreen({
   React.useEffect(() => {
     if (!selectedDisk) {
       setPlan(null);
+      setConfirmation('');
+      setApplyResult(null);
       return;
     }
+    setPlan(null);
+    setApplyResult(null);
     const buildPlan = async () => {
+      const requestId = planRequestRef.current + 1;
+      planRequestRef.current = requestId;
       setPlanning(true);
-      const nextPlan = await window.tornlinux?.previewInstallerPlan?.(selectedDisk, mode);
-      setPlan(nextPlan || null);
-      setPlanning(false);
+      setMessage('');
+      try {
+        const nextPlan = await window.tornlinux?.previewInstallerPlan?.(selectedDisk, mode);
+        if (!mountedRef.current || planRequestRef.current !== requestId) return;
+        setPlan(nextPlan || null);
+      } catch (error) {
+        if (!mountedRef.current || planRequestRef.current !== requestId) return;
+        console.error('Failed to build installer plan', error);
+        setPlan(null);
+        setMessage('Unable to build install plan right now.');
+      } finally {
+        if (mountedRef.current && planRequestRef.current === requestId) {
+          setPlanning(false);
+        }
+      }
     };
     void buildPlan();
   }, [mode, selectedDisk]);
@@ -53,12 +96,25 @@ export function InstallerScreen({
       setMessage('Select a disk before applying.');
       return;
     }
+    const requestId = applyRequestRef.current + 1;
+    applyRequestRef.current = requestId;
     setApplying(true);
     setMessage('');
-    const result = await window.tornlinux?.applyInstallerPlan?.(selectedDisk, mode, confirmation);
-    setApplyResult(result || null);
-    setApplying(false);
-    setMessage(result?.ok ? 'Install completed.' : (result?.error || 'Install failed.'));
+    try {
+      const result = await window.tornlinux?.applyInstallerPlan?.(selectedDisk, mode, confirmation);
+      if (!mountedRef.current || applyRequestRef.current !== requestId) return;
+      setApplyResult(result || null);
+      setMessage(result?.ok ? 'Install completed.' : (result?.error || 'Install failed.'));
+    } catch (error) {
+      if (!mountedRef.current || applyRequestRef.current !== requestId) return;
+      console.error('Failed to apply installer plan', error);
+      setApplyResult(null);
+      setMessage('Unable to apply installer plan.');
+    } finally {
+      if (mountedRef.current && applyRequestRef.current === requestId) {
+        setApplying(false);
+      }
+    }
   };
 
   return (
@@ -90,8 +146,8 @@ export function InstallerScreen({
           <button type="button" className={mode === 'auto' ? 'is-current' : ''} onClick={() => setMode('auto')}>
             Automatic Install
           </button>
-          <button type="button" className={mode === 'manual' ? 'is-current' : ''} onClick={() => setMode('manual')}>
-            Manual Layout
+          <button type="button" disabled title="Manual layout is not implemented in this build.">
+            Manual Layout (Coming Soon)
           </button>
         </div>
 

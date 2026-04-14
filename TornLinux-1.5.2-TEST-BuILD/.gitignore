@@ -1,6 +1,7 @@
 node_modules
 dist
 TornLinux-linux-x64
+live-build/config/includes.chroot/opt/tornlinux-app/
 live-image-*.iso
 *.log
 PREFLIGHT_SUMMARY*.txt

@@ -15,7 +15,7 @@ fi
 
 mkdir -p "$TARGET_DIR"
 rm -rf "$TARGET_DIR"/*
-cp -a "$APP_DIR"/. "$TARGET_DIR"/
+cp -R --no-preserve=ownership "$APP_DIR"/. "$TARGET_DIR"/
 chmod -R 755 "$TARGET_DIR"
 
 if [ ! -f "$TARGET_DIR/TornLinux" ]; then

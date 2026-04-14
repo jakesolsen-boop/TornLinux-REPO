@@ -1,6 +1,7 @@
 const { execFile, spawn } = require('child_process');
-const { app, BrowserWindow, ipcMain, shell, Menu, session } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, session, screen } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 const { IPC_CHANNELS } = require('./runtime/ipc.cjs');
 const { settingsStore } = require('./runtime/settings-store.cjs');
 const { getConfigStatus, readConfig, writeConfig } = require('./runtime/config-store.cjs');
@@ -58,13 +59,16 @@ function applyWebviewPolicy() {
 }
 
 function createMainWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
   const win = new BrowserWindow({
-    width: 1600,
-    height: 980,
+    width,
+    height,
     minWidth: 1280,
     minHeight: 760,
     frame: false,
-    fullscreen: false,
+    fullscreen: true,
+    kiosk: true,
     autoHideMenuBar: true,
     show: false,
     backgroundColor: '#0c1016',
@@ -86,6 +90,8 @@ function createMainWindow() {
   const showWindow = () => {
     if (!shown) {
       shown = true;
+      win.maximize();
+      win.setFullScreen(true);
       win.show();
     }
   };
@@ -127,6 +133,7 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.handle('tornlinux:getAppVersion', async () => APP_VERSION);
+ipcMain.handle('tornlinux:getBootIntent', async () => readBootIntent());
 ipcMain.handle(IPC_CHANNELS.GET_SETTINGS, async () => settingsStore.read());
 ipcMain.handle(IPC_CHANNELS.SET_SETTINGS, async (_event, partial) => settingsStore.write(partial));
 ipcMain.handle(IPC_CHANNELS.TOGGLE_LAYOUT, async () => {
@@ -212,6 +219,21 @@ function getPrimaryWindow() {
   return BrowserWindow.getAllWindows()[0] || null;
 }
 
+function readBootIntent() {
+  try {
+    const cmdline = fs.readFileSync('/proc/cmdline', 'utf8');
+    return {
+      installer: /\btornlinux_installer=1\b/.test(cmdline),
+      cmdline: cmdline.trim(),
+    };
+  } catch (_error) {
+    return {
+      installer: false,
+      cmdline: '',
+    };
+  }
+}
+
 function parseDisplayState(stdout) {
   const text = String(stdout || '');
   const lines = text.split('\n');
@@ -287,7 +309,7 @@ function spawnFirstAvailable(candidates) {
   return new Promise((resolve) => {
     const tryNext = (index) => {
       if (index >= candidates.length) {
-        resolve({ ok: false, method: 'none' });
+        resolve({ ok: false, method: 'none', detail: 'No supported launcher succeeded' });
         return;
       }
       const candidate = candidates[index];
@@ -296,6 +318,7 @@ function spawnFirstAvailable(candidates) {
         child = spawn(candidate.command, candidate.args || [], {
           detached: true,
           stdio: 'ignore',
+          env: process.env,
         });
       } catch (_error) {
         tryNext(index + 1);
@@ -304,8 +327,29 @@ function spawnFirstAvailable(candidates) {
 
       child.once('error', () => tryNext(index + 1));
       child.once('spawn', () => {
-        child.unref();
-        resolve({ ok: true, method: candidate.name });
+        let settled = false;
+        const settleSuccess = () => {
+          if (settled) return;
+          settled = true;
+          child.unref();
+          resolve({ ok: true, method: candidate.name });
+        };
+
+        const settleFailure = () => {
+          if (settled) return;
+          settled = true;
+          tryNext(index + 1);
+        };
+
+        const launchProbe = setTimeout(settleSuccess, candidate.probeMs || 1200);
+        child.once('exit', (code, signal) => {
+          clearTimeout(launchProbe);
+          if (code === 0 && !signal) {
+            settleSuccess();
+            return;
+          }
+          settleFailure();
+        });
       });
     };
     tryNext(0);
@@ -420,7 +464,10 @@ ipcMain.handle('tornlinux:launchSoundSettings', async () => {
 
 ipcMain.handle('tornlinux:launchNetworkSettings', async () => {
   return spawnFirstAvailable([
-    { name: 'nm-connection-editor', command: 'nm-connection-editor', args: [] },
+    { name: 'nm-connection-editor', command: 'nm-connection-editor', args: [], probeMs: 2000 },
+    { name: 'nm-applet', command: 'nm-applet', args: ['--network-settings'], probeMs: 2000 },
+    { name: 'gnome-control-center-network', command: 'gnome-control-center', args: ['network'], probeMs: 2000 },
+    { name: 'gnome-control-center-wifi', command: 'gnome-control-center', args: ['wifi'], probeMs: 2000 },
   ]);
 });
 
@@ -457,7 +504,8 @@ ipcMain.handle('tornlinux:powerAction', async (_event, action) => {
 
 ipcMain.handle('tornlinux:launchBluetoothSettings', async () => {
   return spawnFirstAvailable([
-    { name: 'blueman-manager', command: 'blueman-manager', args: [] },
+    { name: 'blueman-manager', command: 'blueman-manager', args: [], probeMs: 2000 },
+    { name: 'gnome-control-center-bluetooth', command: 'gnome-control-center', args: ['bluetooth'], probeMs: 2000 },
   ]);
 });
 

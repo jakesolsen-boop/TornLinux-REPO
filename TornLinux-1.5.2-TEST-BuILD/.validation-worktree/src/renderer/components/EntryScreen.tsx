@@ -28,7 +28,8 @@ export function EntryScreen({
             time.
           </p>
           <p>
-            If your USB has a valid persistence partition, TornLinux will use it automatically during boot.
+            Persistence is temporarily disabled in this dracut validation build while the USB overlay path is being
+            rebuilt.
           </p>
         </div>
 

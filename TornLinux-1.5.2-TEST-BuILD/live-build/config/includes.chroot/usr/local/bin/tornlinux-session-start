@@ -1,11 +1,25 @@
 #!/bin/bash
 set -u
 
-LOG="${HOME:-/home/tornuser}/.tornlinux-session.log"
-mkdir -p "$(dirname "$LOG")" 2>/dev/null 
+HOME_DIR="${HOME:-/home/tornuser}"
+BASE_DIR="${HOME_DIR}/TornLinux"
+LOG_DIR="${BASE_DIR}/Logs"
+DEBUG_DIR="${BASE_DIR}/Debug"
+LOG="${LOG_DIR}/session.log"
+BOOT_MARKER="${DEBUG_DIR}/.last-boot-id"
+
+mkdir -p "$LOG_DIR" "$DEBUG_DIR" "${BASE_DIR}/Screenshots" 2>/dev/null
 touch "$LOG" 2>/dev/null || true
 
 echo "[$(date)] TornLinux session start" >> "$LOG" 2>/dev/null || true
+
+CURRENT_BOOT_ID="$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)"
+LAST_BOOT_ID="$(cat "$BOOT_MARKER" 2>/dev/null || true)"
+if [[ -n "$CURRENT_BOOT_ID" && "$CURRENT_BOOT_ID" != "$LAST_BOOT_ID" ]] && command -v sudo >/dev/null 2>&1; then
+  echo "[$(date)] Capturing boot debug snapshot" >> "$LOG" 2>/dev/null || true
+  sudo /usr/local/bin/tornlinux-debug-snapshot boot >> "$LOG" 2>&1 || true
+  printf '%s\n' "$CURRENT_BOOT_ID" > "$BOOT_MARKER" 2>/dev/null || true
+fi
 
 if command -v feh >/dev/null 2>&1; then
   echo "[$(date)] Applying wallpaper" >> "$LOG" 2>/dev/null || true

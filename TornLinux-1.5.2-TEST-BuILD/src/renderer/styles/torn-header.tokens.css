@@ -1,5 +1,8 @@
 :root {
-  --tl-header-h: 100px;
+  --tl-header-h: 150px;
+  --tl-rail-h: 124px;
+  --tl-rail-inset-y: 3px;
+  --tl-aligned-rail-h: 124px;
   --tl-header-pad-x: 30px;
   --tl-radius-sm: 10px;
   --tl-radius-md: 14px;
@@ -27,7 +30,7 @@
   --tl-text-muted: rgba(193, 210, 234, 0.74);
   --tl-text-dim: rgba(153, 175, 206, 0.58);
   --tl-teal: #72d977;
-  --tl-blue: #2c78d2;
+  --tl-blue: #74bbff;
   --tl-orange: #f2c94c;
   --tl-red: #ff6b7f;
   --tl-yellow: #d8b46c;
@@ -35,11 +38,15 @@
   --tl-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.45);
   --tl-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --tl-accent-line: rgba(92, 200, 255, 0.42);
+  --tl-cyan-hot: #c9f2ff;
+  --tl-cyan-core: #8fd8ff;
+  --tl-cyan-deep: #49b8ff;
   --tl-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
   --tl-size-brand: 32px;
   --tl-size-sub: 14px;
   --tl-size-chip: 14px;
   --tl-size-stat: 15px;
   --tl-weight-semi: 600;
-  --tl-weight-med: 500;
+  --tl-weight-med: 600;
+  --tl-header-inner-pad-y: 0px;
 }

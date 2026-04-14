@@ -42,23 +42,38 @@ export function SettingsDrawer({
 
   const changeVolume = async (v: number) => {
     setVolume(v);
-    await window.tornlinux?.setSystemVolume?.(v);
+    try {
+      const nextVolume = await window.tornlinux?.setSystemVolume?.(v);
+      if (typeof nextVolume === 'number') setVolume(nextVolume);
+    } catch {
+      setMessage('Volume change failed');
+    }
   };
 
   const applyDisplayMode = async (mode: string) => {
     setDisplayBusy(mode);
-    const result = await window.tornlinux?.setDisplayMode?.(mode);
-    const nextState = await window.tornlinux?.getDisplayState?.();
-    setDisplayState(nextState || null);
-    setDisplayBusy('');
-    setMessage(result?.ok ? `Resolution set to ${mode}` : 'Resolution change failed');
+    try {
+      const result = await window.tornlinux?.setDisplayMode?.(mode);
+      const nextState = await window.tornlinux?.getDisplayState?.();
+      setDisplayState(nextState || null);
+      setMessage(result?.ok ? `Resolution set to ${mode}` : 'Resolution change failed');
+    } catch {
+      setMessage('Resolution change failed');
+    } finally {
+      setDisplayBusy('');
+    }
   };
 
   const runPowerAction = async (action: PowerAction) => {
     setPowerBusy(action);
-    const result = await window.tornlinux?.powerAction?.(action);
-    setPowerBusy('');
-    setMessage(result?.ok ? `${action} started` : `${action} unavailable`);
+    try {
+      const result = await window.tornlinux?.powerAction?.(action);
+      setMessage(result?.ok ? `${action} started` : `${action} unavailable`);
+    } catch {
+      setMessage(`${action} unavailable`);
+    } finally {
+      setPowerBusy('');
+    }
   };
 
   const save = async () => {

@@ -96,7 +96,7 @@ device_is_disk() {
 }
 
 device_has_mounts() {
-  lsblk -lnpo NAME,MOUNTPOINT "$1" | awk 'NF > 1 { exit 0 } END { exit 1 }'
+  lsblk -lnpo NAME,MOUNTPOINT "$1" | awk 'NF > 1 { found = 1; exit } END { exit(found ? 0 : 1) }'
 }
 
 write_fstab() {

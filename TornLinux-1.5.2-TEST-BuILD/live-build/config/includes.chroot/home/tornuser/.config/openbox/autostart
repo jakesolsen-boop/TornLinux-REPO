@@ -4,8 +4,16 @@ xset -dpms
 xset s off
 xset s noblank
 
-/usr/local/bin/tornlinux-session-start &
+if command -v /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 >/dev/null 2>&1; then
+  /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 >/dev/null 2>&1 &
+fi
 
 if command -v xfce4-power-manager >/dev/null 2>&1; then
   xfce4-power-manager >/dev/null 2>&1 &
 fi
+
+if command -v xbindkeys >/dev/null 2>&1; then
+  xbindkeys >/dev/null 2>&1 &
+fi
+
+/usr/local/bin/tornlinux-session-start &
